@@ -1,7 +1,13 @@
 build/
+Libraries/
+Debug/
 *.o
 *.exe
 *.log
 *.vs
 *.lnk
+*.tlog
+*.obj
+*.pch
+*.spv
 *~
