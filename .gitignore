@@ -1,5 +1,4 @@
 build/
-Libraries/
 Debug/
 *.o
 *.exe

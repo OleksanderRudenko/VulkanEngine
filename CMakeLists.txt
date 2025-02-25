@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(VulkanGame LANGUAGES CXX)
+project(VulkanEngine LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,23 +14,23 @@ find_package(Vulkan REQUIRED)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(libraries/GLFW)
+add_subdirectory(Libraries/GLFW)
 
 # Include GLM
-add_subdirectory(libraries/GLM)
+add_subdirectory(Libraries/GLM)
 
 # Create executable
-add_executable(VulkanGame ${SOURCES})
+add_executable(VulkanEngine ${SOURCES})
 
 # Include directories
-target_include_directories(VulkanGame PRIVATE src libraries/GLFW/include libraries/GLM)
+target_include_directories(VulkanEngine PRIVATE src Libraries/glfw/include/GLFW Libraries/glm/glm)
 
 # Link libraries
-target_link_libraries(VulkanGame PRIVATE Vulkan::Vulkan glfw glm)
+target_link_libraries(VulkanEngine PRIVATE Vulkan::Vulkan glfw glm)
 
 # Platform-specific settings
 if(WIN32)
-    target_compile_definitions(VulkanGame PRIVATE VK_USE_PLATFORM_WIN32_KHR)
+    target_compile_definitions(VulkanEngine PRIVATE VK_USE_PLATFORM_WIN32_KHR)
 elseif(UNIX)
-    target_compile_definitions(VulkanGame PRIVATE VK_USE_PLATFORM_XCB_KHR)
+    target_compile_definitions(VulkanEngine PRIVATE VK_USE_PLATFORM_XCB_KHR)
 endif()
