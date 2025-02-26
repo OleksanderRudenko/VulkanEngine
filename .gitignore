@@ -1,12 +1,27 @@
 build/
-Debug/
+bin/
+bin-int/
+*.vcxproj*
+*.sln
+*.user
+*.cache
 *.o
-*.exe
-*.log
-*.vs
-*.lnk
-*.tlog
 *.obj
-*.pch
+*.pdb
+
+.vs
+x64/
+
+# Vulkan SDK
+.vscode/
+*.log
+*.db
+*.ilk
 *.spv
-*~
+
+# GLFW build artifacts
+Libraries/GLFW/build/
+Libraries/GLFW/CMakeCache.txt
+Libraries/GLFW/CMakeFiles/
+
+# GLM (header-only, nothing to exclude)
