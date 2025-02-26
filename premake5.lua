@@ -34,13 +34,15 @@ local vulkanSDK = os.getenv("VULKAN_SDK")
 
 if vulkanSDK then
     print("Vulkan SDK found: " .. vulkanSDK)
-    libdirs { vulkanSDK .. "/Lib" }
+    
     filter "configurations:Debug"
         includedirs { vulkanSDK .. "/Include" }
+        libdirs { vulkanSDK .. "/Lib" }
         links { "vulkan-1" }
 
     filter "configurations:Release"
         includedirs { vulkanSDK .. "/Include" }
+        libdirs { vulkanSDK .. "/Lib" }
         links { "vulkan-1" }
 
     defines { "HAS_VULKAN" }

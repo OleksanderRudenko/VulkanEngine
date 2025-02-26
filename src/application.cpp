@@ -388,8 +388,8 @@ void eApplication::CreateRenderPass()
 //----------------------------------------------------------------------------------------------------------------------
 void eApplication::CreateGraphicsPipeline()
 {
-	auto vertShaderCode = ReadFile_("shaders/vert.spv");
-	auto fragShaderCode = ReadFile_("shaders/frag.spv");
+	auto vertShaderCode = ReadFile_("../src/shaders/vert.spv");
+	auto fragShaderCode = ReadFile_("../src/shaders/frag.spv");
 
 	VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
 	VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
