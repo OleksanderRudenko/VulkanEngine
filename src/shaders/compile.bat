@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+cd /d "%~dp0"
+
 if not defined VULKAN_SDK (
     echo Vulkan SDK not found. Make sure it is installed and the environment variable is set.
     exit /b 1
@@ -17,4 +19,4 @@ if not exist %GLSLC% (
 %GLSLC% shader.frag -o frag.spv
 
 echo Shader compilation completed.
-pause
+exit /b 0

@@ -24,10 +24,17 @@ project "VulkanEngine"
     filter "configurations:Debug"
         runtime "Debug"
         symbols "on"
+        postbuildcommands {
+            "call %{wks.location}src/shaders/compile.bat"
+        }
 
     filter "configurations:Release"
         runtime "Release"
         optimize "on"
+        postbuildcommands {
+            "call %{wks.location}src/shaders/compile.bat"
+        }
+        
 
 -- Vulkan Detection
 local vulkanSDK = os.getenv("VULKAN_SDK")
