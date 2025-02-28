@@ -1,16 +1,17 @@
 #pragma once
 
 #include "tools.h"
+#include "vulkan_engine_lib.h"
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan.h>
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <functional>
 
 //**********************************************************************************************************************
 //	eApplication
 //----------------------------------------------------------------------------------------------------------------------
-class eApplication
+class ENGINE_API eApplication
 {
 public:
 	eApplication()									= default;
@@ -48,7 +49,7 @@ private:
 	void			CreateSyncObjects();
 	void			RecreateSwapChain();
 	
-	VkShaderModule 	CreateShaderModule(const vector<char>& code);
+	VkShaderModule 	CreateShaderModule(const std::vector<char>& code);
 	void			CreateBuffer(VkDeviceSize			size,
 								 VkBufferUsageFlags		usage,
 								 VkMemoryPropertyFlags	properties,
@@ -72,7 +73,7 @@ private:
 	QueueFamilyIndices			FindQueueFamilies(VkPhysicalDevice);
 	uint32_t					FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags);
 	SwapChainSupportDetails		QuerySwapChainSupport(VkPhysicalDevice);
-	vector<const char*>			GetRequiredExtensions_();
+	std::vector<const char*>	GetRequiredExtensions_();
 	void						PopulateDebugMessengerCreateInfo_(VkDebugUtilsMessengerCreateInfoEXT&);
 	static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback_(VkDebugUtilsMessageSeverityFlagBitsEXT			messageSeverity,
 														 VkDebugUtilsMessageTypeFlagsEXT				messageType,
@@ -81,7 +82,7 @@ private:
 	static void					FramebufferResizeCallback(GLFWwindow*	window,
 														  int			width,
 														  int			height);
-	static vector<char>			ReadFile_(const std::string& filename);
+	static std::vector<char>	ReadFile_(const std::string& filename);
 
 	// Swap chain functions
 	VkSurfaceFormatKHR			ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -91,47 +92,48 @@ private:
 	bool			IsDeviceSuitable_(VkPhysicalDevice);
 	bool			CheckDeviceExtensionSupport_(VkPhysicalDevice);
 
-	unique_ptr<GLFWwindow, function<void(GLFWwindow*)>>	window_;
+	std:: unique_ptr<GLFWwindow,
+					 std::function<void(GLFWwindow*)>>	window_;
 	VkInstance											instance_;
-	VkPhysicalDevice									physicalDevice_		= VK_NULL_HANDLE;
-	VkDevice											device_;
-	VkQueue												graphicsQueue_;
-	VkSurfaceKHR										surface_;
-	VkQueue												presentQueue_;
+	VkPhysicalDevice									physicalDevice_			= VK_NULL_HANDLE;
+	VkDevice											device_					= VK_NULL_HANDLE;
+	VkQueue												graphicsQueue_			= VK_NULL_HANDLE;
+	VkSurfaceKHR										surface_				= VK_NULL_HANDLE;
+	VkQueue												presentQueue_			= VK_NULL_HANDLE;
 
-	VkSwapchainKHR										swapChain_;
-	vector<VkImage>										swapChainImages_;
-	VkFormat											swapChainImageFormat_;
+	VkSwapchainKHR										swapChain_				= VK_NULL_HANDLE;
+	std::vector<VkImage>								swapChainImages_;
+	VkFormat											swapChainImageFormat_	= VK_FORMAT_UNDEFINED;
 	VkExtent2D											swapChainExtent_;
-	vector<VkImageView>									swapChainImageViews_;
-	vector<VkFramebuffer>								swapChainFramebuffers_;
+	std::vector<VkImageView>							swapChainImageViews_;
+	std::vector<VkFramebuffer>							swapChainFramebuffers_;
 
-	VkPipelineLayout									pipelineLayout_;
-	VkDescriptorSetLayout								descriptorSetLayout_;
-	VkRenderPass										renderPass_;
-	VkPipeline											graphicsPipeline_;
+	VkPipelineLayout									pipelineLayout_			= VK_NULL_HANDLE;
+	VkDescriptorSetLayout								descriptorSetLayout_	= VK_NULL_HANDLE;
+	VkRenderPass										renderPass_				= VK_NULL_HANDLE;
+	VkPipeline											graphicsPipeline_		= VK_NULL_HANDLE;
 
-	VkCommandPool										commandPool_;
-	vector<VkCommandBuffer>								commandBuffers_;
+	VkCommandPool										commandPool_			= VK_NULL_HANDLE;
+	std::vector<VkCommandBuffer>						commandBuffers_;
 
-	VkDescriptorPool									descriptorPool_;
-	vector<VkDescriptorSet>								descriptorSets_;
+	VkDescriptorPool									descriptorPool_			= VK_NULL_HANDLE;;
+	std::vector<VkDescriptorSet>						descriptorSets_;
 
-	vector<VkSemaphore>									imageAvailableSemaphores_;
-	vector<VkSemaphore>									renderFinishedSemaphores_;
-	vector<VkFence>										inFlightFences_;
-	uint32_t											currentFrame_		= 0;
-	bool												framebufferResized_	= false;
+	std::vector<VkSemaphore>							imageAvailableSemaphores_;
+	std::vector<VkSemaphore>							renderFinishedSemaphores_;
+	std::vector<VkFence>								inFlightFences_;
+	uint32_t											currentFrame_			= 0;
+	bool												framebufferResized_		= false;
 
 	// todo: buffer class
-	VkBuffer											vertexBuffer_;
-	VkDeviceMemory										vertexBufferMemory_;
-	VkBuffer											indexBuffer_;
-	VkDeviceMemory										indexBufferMemory_;
+	VkBuffer											vertexBuffer_			= VK_NULL_HANDLE;;
+	VkDeviceMemory										vertexBufferMemory_		= VK_NULL_HANDLE;;
+	VkBuffer											indexBuffer_			= VK_NULL_HANDLE;;
+	VkDeviceMemory										indexBufferMemory_		= VK_NULL_HANDLE;;
 
-	vector<VkBuffer>									uniformBuffers_;
-	vector<VkDeviceMemory>								uniformBuffersMemory_;
-	vector<void*>										uniformBuffersMapped_;
+	std::vector<VkBuffer>								uniformBuffers_;
+	std::vector<VkDeviceMemory>							uniformBuffersMemory_;
+	std::vector<void*>									uniformBuffersMapped_;
 
-	VkDebugUtilsMessengerEXT							debugMessenger_;
+	VkDebugUtilsMessengerEXT							debugMessenger_			= VK_NULL_HANDLE;;
 };

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+#include <optional>
 #include <vulkan/vulkan.h>
 
 //**********************************************************************************************************************
@@ -7,8 +9,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 struct QueueFamilyIndices
 {
-	optional<uint32_t> graphicsFamily;
-	optional<uint32_t> presentFamily;
+	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
 
 	bool isComplete()
 	{
@@ -21,7 +23,7 @@ struct QueueFamilyIndices
 //----------------------------------------------------------------------------------------------------------------------
 struct SwapChainSupportDetails
 {
-	VkSurfaceCapabilitiesKHR	capabilities;
-	vector<VkSurfaceFormatKHR>	formats;
-	vector<VkPresentModeKHR>	presentModes;
+	VkSurfaceCapabilitiesKHR		capabilities;
+	std::vector<VkSurfaceFormatKHR>	formats;
+	std::vector<VkPresentModeKHR>	presentModes;
 };

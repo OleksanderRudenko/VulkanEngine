@@ -78,8 +78,8 @@ void eApplication::InitWindow(uint32_t _width,
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	window_ = unique_ptr<GLFWwindow, function<void(GLFWwindow*)>>(glfwCreateWindow(_width, _height, "Vulkan", nullptr, nullptr),
-																  [](GLFWwindow* window) { if (window) glfwDestroyWindow(window);});
+	window_ = std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow*)>>(glfwCreateWindow(_width, _height, "Vulkan", nullptr, nullptr),
+																			[](GLFWwindow* window) { if (window) glfwDestroyWindow(window);});
 	glfwSetWindowUserPointer(window_.get(), this);
 	glfwSetFramebufferSizeCallback(window_.get(), FramebufferResizeCallback);
 }
@@ -176,7 +176,7 @@ void eApplication::PickPhysicalDevice()
 		throw std::runtime_error("failed to find GPUs with Vulkan support!");
 	}
 
-	vector<VkPhysicalDevice> devices(deviceCount);
+	std::vector<VkPhysicalDevice> devices(deviceCount);
 	vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
 	for (const auto& device : devices)
 	{
@@ -199,8 +199,8 @@ void eApplication::CreateLogicalDevice()
 {
 	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
-	vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-	set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
 	float queuePriority = 1.0f;
 	for (uint32_t queueFamily : uniqueQueueFamilies)
@@ -411,11 +411,6 @@ void eApplication::CreateDescriptorSetLayout()
 	{
 		throw std::runtime_error("failed to create descriptor set layout!");
 	}
-
-	//VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	//pipelineLayoutInfo.sType			= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	//pipelineLayoutInfo.setLayoutCount	= 1;
-	//pipelineLayoutInfo.pSetLayouts		= &descriptorSetLayout_;
 }
 //======================================================================================================================
 //	eApplication::CreateGraphicsPipeline
@@ -801,7 +796,7 @@ void eApplication::RecreateSwapChain()
 //======================================================================================================================
 //	eApplication::CreateShaderModule
 //----------------------------------------------------------------------------------------------------------------------
-VkShaderModule  eApplication::CreateShaderModule(const vector<char>& _code)
+VkShaderModule  eApplication::CreateShaderModule(const std::vector<char>& _code)
 {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType	= VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -1177,7 +1172,7 @@ QueueFamilyIndices eApplication::FindQueueFamilies(VkPhysicalDevice _device)
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(_device, &queueFamilyCount, nullptr);
 
-	vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(_device, &queueFamilyCount, queueFamilies.data());
 
 	int i = 0;
@@ -1302,7 +1297,7 @@ void eApplication::FramebufferResizeCallback(GLFWwindow*	_window,
 //======================================================================================================================
 //	eApplication::ReadFile_
 //----------------------------------------------------------------------------------------------------------------------
-vector<char> eApplication::ReadFile_(const std::string& _filename)
+std::vector<char> eApplication::ReadFile_(const std::string& _filename)
 {
 	std::ifstream file(_filename, std::ios::ate | std::ios::binary);
 
@@ -1401,10 +1396,10 @@ bool eApplication::CheckDeviceExtensionSupport_(VkPhysicalDevice _device)
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(_device, nullptr, &extensionCount, nullptr);
 
-	vector<VkExtensionProperties> availableExtensions(extensionCount);
+	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
 	vkEnumerateDeviceExtensionProperties(_device, nullptr, &extensionCount, availableExtensions.data());
 
-	set<string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
 	for (const auto& extension : availableExtensions)
 	{
