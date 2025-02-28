@@ -35,11 +35,15 @@ private:
 	void			CreateSwapChain();
 	void			CreateImageViews();
 	void			CreateRenderPass();
+	void			CreateDescriptorSetLayout();
 	void			CreateGraphicsPipeline();
 	void			CreateFramebuffers();
 	void			CreateCommandPool();
 	void			CreateVertexBuffer();
 	void			CreateIndexBuffer();
+	void			CreateUniformBuffers();
+	void			CreateDescriptorPool();
+	void			CreateDescriptorSets();
 	void			CreateCommandBuffer();
 	void			CreateSyncObjects();
 	void			RecreateSwapChain();
@@ -58,6 +62,7 @@ private:
 	void			DrawFrame();
 	void			Cleanup();
 	void			CleanupSwapChain();
+	void			UpdateUniformBuffer(uint32_t currentImage);
 
 	void			RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	bool			CheckValidationLayerSupport();
@@ -102,11 +107,15 @@ private:
 	vector<VkFramebuffer>								swapChainFramebuffers_;
 
 	VkPipelineLayout									pipelineLayout_;
+	VkDescriptorSetLayout								descriptorSetLayout_;
 	VkRenderPass										renderPass_;
 	VkPipeline											graphicsPipeline_;
 
 	VkCommandPool										commandPool_;
 	vector<VkCommandBuffer>								commandBuffers_;
+
+	VkDescriptorPool									descriptorPool_;
+	vector<VkDescriptorSet>								descriptorSets_;
 
 	vector<VkSemaphore>									imageAvailableSemaphores_;
 	vector<VkSemaphore>									renderFinishedSemaphores_;
@@ -114,10 +123,15 @@ private:
 	uint32_t											currentFrame_		= 0;
 	bool												framebufferResized_	= false;
 
+	// todo: buffer class
 	VkBuffer											vertexBuffer_;
 	VkDeviceMemory										vertexBufferMemory_;
 	VkBuffer											indexBuffer_;
 	VkDeviceMemory										indexBufferMemory_;
+
+	vector<VkBuffer>									uniformBuffers_;
+	vector<VkDeviceMemory>								uniformBuffersMemory_;
+	vector<void*>										uniformBuffersMapped_;
 
 	VkDebugUtilsMessengerEXT							debugMessenger_;
 };

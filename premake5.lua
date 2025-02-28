@@ -11,7 +11,13 @@ project "VulkanEngine"
     targetdir ("bin/" .. "%{cfg.buildcfg}")
     objdir ("bin-int/" .. "%{cfg.buildcfg}")
 
-    files { "src/**.h", "src/**.cpp" }
+    files { "src/**.h",
+            "src/**.cpp",
+            "src/tools/**.h",
+            "src/tools/**.cpp",
+            "src/shaders/**.vert",
+            "src/shaders/**.frag"
+    }
 
     includedirs {
         "Libraries/GLFW/include",
