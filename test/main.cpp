@@ -4,9 +4,13 @@
 
 int main()
 {
-	eApplication app;
+	Application app(800, 600);
 	try {
-		app.Run(800, 600);
+		if(!app.Init())
+		{
+			return EXIT_FAILURE;
+		}
+		app.Run();
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return EXIT_FAILURE;

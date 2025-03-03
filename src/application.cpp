@@ -5,6 +5,7 @@
 #include "tools/timer.h"
 #include <algorithm> 
 #include <fstream>
+#include <set>
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -24,9 +25,7 @@ const std::vector<const char*> deviceExtensions =
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-//**********************************************************************************************************************
-//	CreateDebugUtilsMessengerEXT
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 VkResult CreateDebugUtilsMessengerEXT(VkInstance								_instance,
 									  const VkDebugUtilsMessengerCreateInfoEXT*	_pCreateInfo,
 									  const VkAllocationCallbacks*				_pAllocator,
@@ -42,10 +41,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance								_instance,
 		return VK_ERROR_EXTENSION_NOT_PRESENT;
 	}
 }
-
-//**********************************************************************************************************************
-//	DestroyDebugUtilsMessengerEXT
-//----------------------------------------------------------------------------------------------------------------------
+//======================================================================================================================
 void DestroyDebugUtilsMessengerEXT(VkInstance					_instance,
 								   VkDebugUtilsMessengerEXT		_debugMessenger,
 								   const VkAllocationCallbacks*	_pAllocator)
@@ -57,36 +53,32 @@ void DestroyDebugUtilsMessengerEXT(VkInstance					_instance,
 		func(_instance, _debugMessenger, _pAllocator);
 	}
 }
-
-//**********************************************************************************************************************
-//	eApplication
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::Run(uint32_t _width,
-					   uint32_t _height)
+//======================================================================================================================
+Application::Application(uint32_t _width,
+						 uint32_t _height)
+: window_(std::make_unique<Window>(_width, _height, "Vulkan Engine"))
+{}
+//======================================================================================================================
+bool Application::Init()
 {
-	InitWindow(_width, _height);
+	// todo: return false instead of exception
+	if(!window_->Init())
+	{
+		return false;
+	}
+
 	InitVulkan();
+
+	return true;
+}
+//======================================================================================================================
+void Application::Run()
+{
 	MainLoop();
 	Cleanup();
 }
 //======================================================================================================================
-//	eApplication::InitWindow
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::InitWindow(uint32_t _width,
-							  uint32_t _height)
-{	
-	glfwInit();
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-	window_ = std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow*)>>(glfwCreateWindow(_width, _height, "Vulkan", nullptr, nullptr),
-																			[](GLFWwindow* window) { if (window) glfwDestroyWindow(window);});
-	glfwSetWindowUserPointer(window_.get(), this);
-	glfwSetFramebufferSizeCallback(window_.get(), FramebufferResizeCallback);
-}
-//======================================================================================================================
-//	eApplication::InitVulkan
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::InitVulkan()
+void Application::InitVulkan()
 {
 	CreateInstance();
 	SetupDebugMessenger();
@@ -100,6 +92,7 @@ void eApplication::InitVulkan()
 	CreateGraphicsPipeline();
 	CreateFramebuffers();
 	CreateCommandPool();
+	CreateTextureImage();
 	CreateVertexBuffer();
 	CreateIndexBuffer();
 	CreateUniformBuffers();
@@ -109,9 +102,7 @@ void eApplication::InitVulkan()
 	CreateSyncObjects();
 }
 //======================================================================================================================
-//	eApplication::CreateInstance
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateInstance()
+void Application::CreateInstance()
 {
 	if (enableValidationLayers && !CheckValidationLayerSupport())
 	{
@@ -155,19 +146,15 @@ void eApplication::CreateInstance()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateSurface
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateSurface()
+void Application::CreateSurface()
 {
-	if (glfwCreateWindowSurface(instance_, window_.get(), nullptr, &surface_) != VK_SUCCESS)
+	if (glfwCreateWindowSurface(instance_, window_.get()->GetWindow(), nullptr, &surface_) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create window surface!");
 	}
 }
 //======================================================================================================================
-//	eApplication::PickPhysicalDevice
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::PickPhysicalDevice()
+void Application::PickPhysicalDevice()
 {
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
@@ -193,9 +180,7 @@ void eApplication::PickPhysicalDevice()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateLogicalDevice
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateLogicalDevice()
+void Application::CreateLogicalDevice()
 {
 	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
@@ -245,9 +230,7 @@ void eApplication::CreateLogicalDevice()
 	vkGetDeviceQueue(device_, indices.presentFamily.value(), 0, &presentQueue_);
 }
 //======================================================================================================================
-//	eApplication::CreateSwapChain
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateSwapChain()
+void Application::CreateSwapChain()
 {
 	SwapChainSupportDetails	swapChainSupport	= QuerySwapChainSupport(physicalDevice_);
 
@@ -270,9 +253,6 @@ void eApplication::CreateSwapChain()
 	createInfo.imageExtent		= extent;
 	createInfo.imageArrayLayers	= 1;
 	createInfo.imageUsage		= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	//createInfo.imageUsage		= VK_IMAGE_USAGE_TRANSFER_SRC_BIT
-	//	| VK_IMAGE_USAGE_STORAGE_BIT
-	//	| VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 	uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
@@ -316,9 +296,7 @@ void eApplication::CreateSwapChain()
 	swapChainExtent_		= extent;
 }
 //======================================================================================================================
-//	eApplication::CreateImageViews
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateImageViews()
+void Application::CreateImageViews()
 {
 	swapChainImageViews_.resize(swapChainImages_.size());
 
@@ -346,9 +324,7 @@ void eApplication::CreateImageViews()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateRenderPass
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateRenderPass()
+void Application::CreateRenderPass()
 {
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format			= swapChainImageFormat_;
@@ -390,9 +366,7 @@ void eApplication::CreateRenderPass()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateDescriptorSetLayout
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateDescriptorSetLayout()
+void Application::CreateDescriptorSetLayout()
 {
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
 	uboLayoutBinding.binding			= 0;
@@ -413,9 +387,7 @@ void eApplication::CreateDescriptorSetLayout()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateGraphicsPipeline
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateGraphicsPipeline()
+void Application::CreateGraphicsPipeline()
 {
 	auto vertShaderCode = ReadFile_("../src/shaders/vert.spv");
 	auto fragShaderCode = ReadFile_("../src/shaders/frag.spv");
@@ -548,9 +520,7 @@ void eApplication::CreateGraphicsPipeline()
 	vkDestroyShaderModule(device_, vertShaderModule, nullptr);
 }
 //======================================================================================================================
-//	eApplication::CreateFramebuffers
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateFramebuffers()
+void Application::CreateFramebuffers()
 {
 	swapChainFramebuffers_.resize(swapChainImageViews_.size());
 	for (size_t i = 0; i < swapChainImageViews_.size(); ++i)
@@ -576,9 +546,7 @@ void eApplication::CreateFramebuffers()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateCommandPool
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateCommandPool()
+void Application::CreateCommandPool()
 {
 	QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(physicalDevice_);
 
@@ -592,9 +560,12 @@ void eApplication::CreateCommandPool()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateVertexBuffer
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateVertexBuffer()
+void Application::CreateTextureImage()
+{
+	
+}
+//======================================================================================================================
+void Application::CreateVertexBuffer()
 {
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 	VkBuffer stagingBuffer;
@@ -621,9 +592,7 @@ void eApplication::CreateVertexBuffer()
 	vkFreeMemory(device_, stagingBufferMemory, nullptr);
 }
 //======================================================================================================================
-//	eApplication::CreateIndexBuffer
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateIndexBuffer()
+void Application::CreateIndexBuffer()
 {
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
@@ -652,9 +621,7 @@ void eApplication::CreateIndexBuffer()
 	vkFreeMemory(device_, stagingBufferMemory, nullptr);
 }
 //======================================================================================================================
-//	eApplication::CreateUniformBuffers
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateUniformBuffers()
+void Application::CreateUniformBuffers()
 {
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -674,9 +641,7 @@ void eApplication::CreateUniformBuffers()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateDescriptorPool
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateDescriptorPool()
+void Application::CreateDescriptorPool()
 {
 	VkDescriptorPoolSize poolSize{};
 	poolSize.type				= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -694,9 +659,7 @@ void eApplication::CreateDescriptorPool()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateDescriptorSets
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateDescriptorSets()
+void Application::CreateDescriptorSets()
 {
 	std::vector<VkDescriptorSetLayout>	layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout_);
 	VkDescriptorSetAllocateInfo			allocInfo{};
@@ -730,9 +693,7 @@ void eApplication::CreateDescriptorSets()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateCommandBuffer
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateCommandBuffer()
+void Application::CreateCommandBuffer()
 {
 	commandBuffers_.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -747,9 +708,7 @@ void eApplication::CreateCommandBuffer()
 	}
 }
 //======================================================================================================================
-//	eApplication::CreateSyncObjects
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateSyncObjects()
+void Application::CreateSyncObjects()
 {
 	imageAvailableSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
@@ -773,15 +732,13 @@ void eApplication::CreateSyncObjects()
 	}
 }
 //======================================================================================================================
-//	eApplication::RecreateSwapChain
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::RecreateSwapChain()
+void Application::RecreateSwapChain()
 {
 	int width = 0, height = 0;
-	glfwGetFramebufferSize(window_.get(), &width, &height);
+	glfwGetFramebufferSize(window_.get()->GetWindow(), &width, &height);
 	while (width == 0 || height == 0)
 	{
-		glfwGetFramebufferSize(window_.get(), &width, &height);
+		glfwGetFramebufferSize(window_.get()->GetWindow(), &width, &height);
 		glfwWaitEvents();
 	}
 
@@ -794,9 +751,7 @@ void eApplication::RecreateSwapChain()
 	CreateFramebuffers();
 }
 //======================================================================================================================
-//	eApplication::CreateShaderModule
-//----------------------------------------------------------------------------------------------------------------------
-VkShaderModule  eApplication::CreateShaderModule(const std::vector<char>& _code)
+VkShaderModule  Application::CreateShaderModule(const std::vector<char>& _code)
 {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType	= VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -812,9 +767,7 @@ VkShaderModule  eApplication::CreateShaderModule(const std::vector<char>& _code)
 	return shaderModule;
 }
 //======================================================================================================================
-//	eApplication::CreateBuffer
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CreateBuffer(VkDeviceSize			_size,
+void Application::CreateBuffer(VkDeviceSize			_size,
 								VkBufferUsageFlags		_usage,
 								VkMemoryPropertyFlags	_properties,
 								VkBuffer&				_buffer,
@@ -847,9 +800,7 @@ void eApplication::CreateBuffer(VkDeviceSize			_size,
 	vkBindBufferMemory(device_, _buffer, _bufferMemory, 0);
 }
 //======================================================================================================================
-//	eApplication::CopyBuffer
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CopyBuffer(VkBuffer		_srcBuffer,
+void Application::CopyBuffer(VkBuffer		_srcBuffer,
 							  VkBuffer		_dstBuffer,
 							  VkDeviceSize	_size)
 {
@@ -885,11 +836,9 @@ void eApplication::CopyBuffer(VkBuffer		_srcBuffer,
 	vkFreeCommandBuffers(device_, commandPool_, 1, &commandBuffer);
 }
 //======================================================================================================================
-//	eApplication::MainLoop
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::MainLoop()
+void Application::MainLoop()
 {
-	while (!glfwWindowShouldClose(window_.get()))
+	while (!glfwWindowShouldClose(window_.get()->GetWindow()))
 	{
 		glfwPollEvents();
 		DrawFrame();
@@ -898,9 +847,7 @@ void eApplication::MainLoop()
 	vkDeviceWaitIdle(device_);
 }
 //======================================================================================================================
-//	eApplication::DrawFrame
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::DrawFrame()
+void Application::DrawFrame()
 {
 	vkWaitForFences(device_, 1, &inFlightFences_[currentFrame_], VK_TRUE, UINT64_MAX);
 
@@ -955,9 +902,9 @@ void eApplication::DrawFrame()
 	presentInfo.pResults			= nullptr;
 
 	result = vkQueuePresentKHR(presentQueue_, &presentInfo);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized_)
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window_.get()->FramebufferResized())
 	{
-		framebufferResized_ = false;
+		window_.get()->FramebufferResizedReset();
 		RecreateSwapChain();
 	}
 	else if (result != VK_SUCCESS)
@@ -968,9 +915,7 @@ void eApplication::DrawFrame()
 	currentFrame_ = (currentFrame_ + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 //======================================================================================================================
-//	eApplication::Cleanup
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::Cleanup()
+void Application::Cleanup()
 {
 	CleanupSwapChain();
 
@@ -1011,13 +956,9 @@ void eApplication::Cleanup()
 
 	vkDestroySurfaceKHR(instance_, surface_, nullptr);
 	vkDestroyInstance(instance_, nullptr);
-
-	glfwTerminate();
 }
 //======================================================================================================================
-//	eApplication::CleanupSwapChain
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::CleanupSwapChain()
+void Application::CleanupSwapChain()
 {
 	for (auto framebuffer : swapChainFramebuffers_)
 	{
@@ -1032,9 +973,7 @@ void eApplication::CleanupSwapChain()
 	vkDestroySwapchainKHR(device_, swapChain_, nullptr);
 }
 //======================================================================================================================
-//	eApplication::UpdateUniformBuffer
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::UpdateUniformBuffer(uint32_t _currentImage)
+void Application::UpdateUniformBuffer(uint32_t _currentImage)
 {
 	static auto startTime	= std::chrono::high_resolution_clock::now();
 	auto currentTime		= std::chrono::high_resolution_clock::now();
@@ -1051,9 +990,7 @@ void eApplication::UpdateUniformBuffer(uint32_t _currentImage)
 	memcpy(uniformBuffersMapped_[_currentImage], &ubo, sizeof(ubo));
 }
 //======================================================================================================================
-//	eApplication::CheckValidationLayerSupport
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::RecordCommandBuffer(VkCommandBuffer	_commandBuffer,
+void Application::RecordCommandBuffer(VkCommandBuffer	_commandBuffer,
 									   uint32_t			_imageIndex)
 {
 	VkCommandBufferBeginInfo beginInfo{};
@@ -1117,9 +1054,7 @@ void eApplication::RecordCommandBuffer(VkCommandBuffer	_commandBuffer,
 	}
 }
 //======================================================================================================================
-//	eApplication::CheckValidationLayerSupport
-//----------------------------------------------------------------------------------------------------------------------
-bool eApplication::CheckValidationLayerSupport()
+bool Application::CheckValidationLayerSupport()
 {
 	uint32_t layerCount;
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -1148,9 +1083,7 @@ bool eApplication::CheckValidationLayerSupport()
 	return true;
 }
 //======================================================================================================================
-//	eApplication::SetupDebugMessenger
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::SetupDebugMessenger()
+void Application::SetupDebugMessenger()
 {
 	if (!enableValidationLayers) return;
 
@@ -1163,9 +1096,7 @@ void eApplication::SetupDebugMessenger()
 	}
 }
 //======================================================================================================================
-//	eApplication::FindQueueFamilies
-//----------------------------------------------------------------------------------------------------------------------
-QueueFamilyIndices eApplication::FindQueueFamilies(VkPhysicalDevice _device)
+QueueFamilyIndices Application::FindQueueFamilies(VkPhysicalDevice _device)
 {
 	QueueFamilyIndices indices;
 
@@ -1202,9 +1133,7 @@ QueueFamilyIndices eApplication::FindQueueFamilies(VkPhysicalDevice _device)
 	return indices;
 }
 //======================================================================================================================
-//	eApplication::FindMemoryType
-//----------------------------------------------------------------------------------------------------------------------
-uint32_t eApplication::FindMemoryType(uint32_t _typeFilter, VkMemoryPropertyFlags _properties)
+uint32_t Application::FindMemoryType(uint32_t _typeFilter, VkMemoryPropertyFlags _properties)
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memProperties);
@@ -1219,9 +1148,7 @@ uint32_t eApplication::FindMemoryType(uint32_t _typeFilter, VkMemoryPropertyFlag
 	throw std::runtime_error("failed to find suitable memory type!");
 }
 //======================================================================================================================
-//	eApplication::QuerySwapChainSupport
-//----------------------------------------------------------------------------------------------------------------------
-SwapChainSupportDetails eApplication::QuerySwapChainSupport(VkPhysicalDevice _device)
+SwapChainSupportDetails Application::QuerySwapChainSupport(VkPhysicalDevice _device)
 {
 	SwapChainSupportDetails details;
 
@@ -1247,9 +1174,7 @@ SwapChainSupportDetails eApplication::QuerySwapChainSupport(VkPhysicalDevice _de
 	return details;
 }
 //======================================================================================================================
-//	eApplication::GetRequiredExtensions_
-//----------------------------------------------------------------------------------------------------------------------
-std::vector<const char*> eApplication::GetRequiredExtensions_()
+std::vector<const char*> Application::GetRequiredExtensions_()
 {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
@@ -1265,9 +1190,7 @@ std::vector<const char*> eApplication::GetRequiredExtensions_()
 	return extensions;
 }
 //======================================================================================================================
-//	eApplication::PopulateDebugMessengerCreateInfo
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::PopulateDebugMessengerCreateInfo_(VkDebugUtilsMessengerCreateInfoEXT& _createInfo)
+void Application::PopulateDebugMessengerCreateInfo_(VkDebugUtilsMessengerCreateInfoEXT& _createInfo)
 {
 	_createInfo					= {};
 	_createInfo.sType			= VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -1276,28 +1199,22 @@ void eApplication::PopulateDebugMessengerCreateInfo_(VkDebugUtilsMessengerCreate
 	_createInfo.pfnUserCallback	= DebugCallback_;
 }
 //======================================================================================================================
-//	eApplication::DebugCallback_
-//----------------------------------------------------------------------------------------------------------------------
-VKAPI_ATTR VkBool32 VKAPI_CALL eApplication::DebugCallback_(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+VKAPI_ATTR VkBool32 VKAPI_CALL Application::DebugCallback_(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
 	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
 	return VK_FALSE;
 }
+////======================================================================================================================
+//void Application::FramebufferResizeCallback(GLFWwindow*	_window,
+//											int			_width,
+//											int			_height)
+//{
+//	auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(_window));
+//	app->framebufferResized_ = true;
+//}
 //======================================================================================================================
-//	eApplication::FramebufferResizeCallback
-//----------------------------------------------------------------------------------------------------------------------
-void eApplication::FramebufferResizeCallback(GLFWwindow*	_window,
-											 int			_width,
-											 int			_height)
-{
-	auto app = reinterpret_cast<eApplication*>(glfwGetWindowUserPointer(_window));
-	app->framebufferResized_ = true;
-}
-//======================================================================================================================
-//	eApplication::ReadFile_
-//----------------------------------------------------------------------------------------------------------------------
-std::vector<char> eApplication::ReadFile_(const std::string& _filename)
+std::vector<char> Application::ReadFile_(const std::string& _filename)
 {
 	std::ifstream file(_filename, std::ios::ate | std::ios::binary);
 
@@ -1317,9 +1234,7 @@ std::vector<char> eApplication::ReadFile_(const std::string& _filename)
 	return buffer;
 }
 //======================================================================================================================
-//	eApplication::ChooseSwapSurfaceFormat
-//----------------------------------------------------------------------------------------------------------------------
-VkSurfaceFormatKHR eApplication::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& _availableFormats)
+VkSurfaceFormatKHR Application::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& _availableFormats)
 {
 	for (const auto& availableFormat : _availableFormats)
 	{
@@ -1332,9 +1247,7 @@ VkSurfaceFormatKHR eApplication::ChooseSwapSurfaceFormat(const std::vector<VkSur
 	return _availableFormats[0];
 }
 //======================================================================================================================
-//	eApplication::ChooseSwapPresentMode
-//----------------------------------------------------------------------------------------------------------------------
-VkPresentModeKHR eApplication::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& _availablePresentModes)
+VkPresentModeKHR Application::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& _availablePresentModes)
 {
 	for (const auto& availablePresentMode : _availablePresentModes)
 	{
@@ -1347,9 +1260,7 @@ VkPresentModeKHR eApplication::ChooseSwapPresentMode(const std::vector<VkPresent
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 //======================================================================================================================
-//	eApplication::ChooseSwapExtent
-//----------------------------------------------------------------------------------------------------------------------
-VkExtent2D eApplication::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabilities)
+VkExtent2D Application::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabilities)
 {
 	if (_capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
@@ -1358,7 +1269,7 @@ VkExtent2D eApplication::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capab
 	else
 	{
 		int width, height;
-		glfwGetFramebufferSize(window_.get(), &width, &height);
+		glfwGetFramebufferSize(window_.get()->GetWindow(), &width, &height);
 
 		VkExtent2D actualExtent =
 		{
@@ -1373,9 +1284,7 @@ VkExtent2D eApplication::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capab
 	}
 }
 //======================================================================================================================
-//	eApplication::IsDeviceSuitable_
-//----------------------------------------------------------------------------------------------------------------------
-bool eApplication::IsDeviceSuitable_(VkPhysicalDevice _device)
+bool Application::IsDeviceSuitable_(VkPhysicalDevice _device)
 {
 	QueueFamilyIndices indices	= FindQueueFamilies(_device);
 	bool extensionsSupported	= CheckDeviceExtensionSupport_(_device);
@@ -1389,9 +1298,7 @@ bool eApplication::IsDeviceSuitable_(VkPhysicalDevice _device)
 	return indices.isComplete() && extensionsSupported && swapChainAdequate;
 }
 //======================================================================================================================
-//	eApplication::CheckDeviceExtensionSupport_
-//----------------------------------------------------------------------------------------------------------------------
-bool eApplication::CheckDeviceExtensionSupport_(VkPhysicalDevice _device)
+bool Application::CheckDeviceExtensionSupport_(VkPhysicalDevice _device)
 {
 	uint32_t extensionCount;
 	vkEnumerateDeviceExtensionProperties(_device, nullptr, &extensionCount, nullptr);

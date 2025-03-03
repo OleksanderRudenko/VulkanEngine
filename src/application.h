@@ -2,32 +2,27 @@
 
 #include "tools.h"
 #include "vulkan_engine_lib.h"
-#include <GLFW/glfw3.h>
+#include "window.h"
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
-#include <functional>
 
-//**********************************************************************************************************************
-//	eApplication
-//----------------------------------------------------------------------------------------------------------------------
-class ENGINE_API eApplication
+class ENGINE_API Application
 {
 public:
-	eApplication()									= default;
-	eApplication(const eApplication&)				= delete;
-	eApplication(eApplication&&)					= default;
-	virtual ~eApplication()							= default;
+	Application(uint32_t width,
+				uint32_t height);
+	Application(const Application&)					= delete;
+	Application(Application&&)						= default;
+	virtual ~Application()							= default;
 
-	eApplication&	operator=(const eApplication&)	= delete;
-	eApplication&	operator=(eApplication&&)		= default;
+	Application&	operator=(const Application&)	= delete;
+	Application&	operator=(Application&&)		= default;
 
-	void			Run(uint32_t widht,
-						uint32_t height);
+	bool			Init();
+	void			Run();
 
 private:
-	void			InitWindow(uint32_t width,
-							   uint32_t height);
 	void			InitVulkan();
 	void			CreateInstance();
 	void			CreateSurface();
@@ -40,6 +35,7 @@ private:
 	void			CreateGraphicsPipeline();
 	void			CreateFramebuffers();
 	void			CreateCommandPool();
+	void			CreateTextureImage();
 	void			CreateVertexBuffer();
 	void			CreateIndexBuffer();
 	void			CreateUniformBuffers();
@@ -79,9 +75,6 @@ private:
 														 VkDebugUtilsMessageTypeFlagsEXT				messageType,
 														 const VkDebugUtilsMessengerCallbackDataEXT*	pCallbackData,
 														 void*											pUserData);
-	static void					FramebufferResizeCallback(GLFWwindow*	window,
-														  int			width,
-														  int			height);
 	static std::vector<char>	ReadFile_(const std::string& filename);
 
 	// Swap chain functions
@@ -92,9 +85,8 @@ private:
 	bool			IsDeviceSuitable_(VkPhysicalDevice);
 	bool			CheckDeviceExtensionSupport_(VkPhysicalDevice);
 
-	std:: unique_ptr<GLFWwindow,
-					 std::function<void(GLFWwindow*)>>	window_;
-	VkInstance											instance_;
+	std::unique_ptr<Window>								window_;
+	VkInstance											instance_				= VK_NULL_HANDLE;
 	VkPhysicalDevice									physicalDevice_			= VK_NULL_HANDLE;
 	VkDevice											device_					= VK_NULL_HANDLE;
 	VkQueue												graphicsQueue_			= VK_NULL_HANDLE;
@@ -123,7 +115,6 @@ private:
 	std::vector<VkSemaphore>							renderFinishedSemaphores_;
 	std::vector<VkFence>								inFlightFences_;
 	uint32_t											currentFrame_			= 0;
-	bool												framebufferResized_		= false;
 
 	// todo: buffer class
 	VkBuffer											vertexBuffer_			= VK_NULL_HANDLE;;
