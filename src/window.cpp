@@ -20,12 +20,14 @@ bool Window::Init()
 {
 	if(glfwInit() == GLFW_FALSE)
 	{
+		std::cout << "glfwInit failed\n";
 		return false;
 	}
 
 	if(glfwVulkanSupported() == GLFW_FALSE)
 	{
 		std::cout << "Vulkan not supported\n";
+		return false;
 	}
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
