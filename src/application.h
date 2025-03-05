@@ -1,6 +1,7 @@
 #pragma once
 
 #include "buffer.h"
+#include "texture.h"
 #include "tools.h"
 #include "vulkan_engine_lib.h"
 #include "window.h"
@@ -47,11 +48,8 @@ private:
 	void			RecreateSwapChain();
 	
 	VkShaderModule 	CreateShaderModule(const std::vector<char>& code);
-	//void			CreateBuffer(VkDeviceSize			size,
-	//							 VkBufferUsageFlags		usage,
-	//							 VkMemoryPropertyFlags	properties,
-	//							 VkBuffer&				buffer,
-	//							 VkDeviceMemory&		bufferMemory);
+
+	// static function in Buffer class?
 	void			CopyBuffer(VkBuffer srcBuffer,
 							   VkBuffer dstBuffer,
 							   VkDeviceSize size);
@@ -88,7 +86,7 @@ private:
 	std::unique_ptr<Window>								window_;
 	VkInstance											instance_				= VK_NULL_HANDLE;
 	VkPhysicalDevice									physicalDevice_			= VK_NULL_HANDLE;
-	VkDevice											logicalDevice_					= VK_NULL_HANDLE;
+	VkDevice											logicalDevice_			= VK_NULL_HANDLE;
 	VkQueue												graphicsQueue_			= VK_NULL_HANDLE;
 	VkSurfaceKHR										surface_				= VK_NULL_HANDLE;
 	VkQueue												presentQueue_			= VK_NULL_HANDLE;
@@ -118,15 +116,11 @@ private:
 
 	std::unique_ptr<Buffer>								vertexBuffer_;
 	std::unique_ptr<Buffer>								indexBuffer_;
-	// todo: buffer class
-	//VkBuffer											vertexBuffer_			= VK_NULL_HANDLE;
-	//VkDeviceMemory										vertexBufferMemory_		= VK_NULL_HANDLE;
-	//VkBuffer											indexBuffer_			= VK_NULL_HANDLE;
-	//VkDeviceMemory										indexBufferMemory_		= VK_NULL_HANDLE;
-
 	std::vector<std::unique_ptr<Buffer>>				uniformBuffers_;
-	//std::vector<VkDeviceMemory>							uniformBuffersMemory_;
 	std::vector<void*>									uniformBuffersMapped_;
 
-	VkDebugUtilsMessengerEXT							debugMessenger_			= VK_NULL_HANDLE;;
+	VkDebugUtilsMessengerEXT							debugMessenger_			= VK_NULL_HANDLE;
+
+	//move to texture class
+	Texture	texture_;
 };

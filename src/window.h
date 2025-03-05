@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+// add namespace
+
 class Window
 {
 public:

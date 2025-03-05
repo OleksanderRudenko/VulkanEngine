@@ -562,7 +562,9 @@ void Application::CreateCommandPool()
 //======================================================================================================================
 void Application::CreateTextureImage()
 {
-	
+	//texture_.Create("../src/textures/test.png", std::ref(logicalDevice_), physicalDevice_);
+
+
 }
 //======================================================================================================================
 void Application::CreateVertexBuffer()
@@ -582,9 +584,6 @@ void Application::CreateVertexBuffer()
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	CopyBuffer(stagingBuffer.GetBuffer(), vertexBuffer_.get()->GetBuffer(), vertexBuffer_.get()->GetSize());
-
-	vkDestroyBuffer(logicalDevice_, stagingBuffer.GetBuffer(), nullptr);
-	vkFreeMemory(logicalDevice_, stagingBuffer.GetBufferMemory(), nullptr);
 }
 //======================================================================================================================
 void Application::CreateIndexBuffer()
@@ -604,9 +603,6 @@ void Application::CreateIndexBuffer()
 									 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 									 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer_.get()->GetBuffer(), indexBuffer_.get()->GetSize());
-
-	vkDestroyBuffer(logicalDevice_, stagingBuffer.GetBuffer(), nullptr);
-	vkFreeMemory(logicalDevice_, stagingBuffer.GetBufferMemory(), nullptr);
 }
 //======================================================================================================================
 void Application::CreateUniformBuffers()
@@ -661,18 +657,18 @@ void Application::CreateDescriptorSets()
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
 		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers_[i].get()->GetBuffer();
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(UniformBufferObject);
+		bufferInfo.buffer	= uniformBuffers_[i].get()->GetBuffer();
+		bufferInfo.offset	= 0;
+		bufferInfo.range	= sizeof(UniformBufferObject);
 
 		VkWriteDescriptorSet descriptorWrite{};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = descriptorSets_[i];
-		descriptorWrite.dstBinding = 0;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
+		descriptorWrite.sType			= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet			= descriptorSets_[i];
+		descriptorWrite.dstBinding		= 0;
+		descriptorWrite.dstArrayElement	= 0;
+		descriptorWrite.descriptorType	= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount	= 1;
+		descriptorWrite.pBufferInfo		= &bufferInfo;
 
 		vkUpdateDescriptorSets(logicalDevice_, 1, &descriptorWrite, 0, nullptr);
 	}
@@ -688,7 +684,8 @@ void Application::CreateCommandBuffer()
 	allocInfo.level					= VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	allocInfo.commandBufferCount	= (uint32_t) commandBuffers_.size();
 
-	if (vkAllocateCommandBuffers(logicalDevice_, &allocInfo, commandBuffers_.data()) != VK_SUCCESS) {
+	if (vkAllocateCommandBuffers(logicalDevice_, &allocInfo, commandBuffers_.data()) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to allocate command buffers!");
 	}
 }
@@ -751,39 +748,6 @@ VkShaderModule  Application::CreateShaderModule(const std::vector<char>& _code)
 
 	return shaderModule;
 }
-//======================================================================================================================
-//void Application::CreateBuffer(VkDeviceSize				_size,
-//							   VkBufferUsageFlags		_usage,
-//							   VkMemoryPropertyFlags	_properties,
-//							   VkBuffer&				_buffer,
-//							   VkDeviceMemory&			_bufferMemory)
-//{
-//	VkBufferCreateInfo bufferInfo{};
-//	bufferInfo.sType		= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-//	bufferInfo.size			= _size;
-//	bufferInfo.usage		= _usage;
-//	bufferInfo.sharingMode	= VK_SHARING_MODE_EXCLUSIVE;
-//
-//	if (vkCreateBuffer(logicalDevice_, &bufferInfo, nullptr, &_buffer) != VK_SUCCESS)
-//	{
-//		throw std::runtime_error("failed to create buffer!");
-//	}
-//
-//	VkMemoryRequirements memRequirements;
-//	vkGetBufferMemoryRequirements(logicalDevice_, _buffer, &memRequirements);
-//
-//	VkMemoryAllocateInfo allocInfo{};
-//	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-//	allocInfo.allocationSize = memRequirements.size;
-//	allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, _properties);
-//
-//	if (vkAllocateMemory(logicalDevice_, &allocInfo, nullptr, &_bufferMemory) != VK_SUCCESS)
-//	{
-//		throw std::runtime_error("failed to allocate buffer memory!");
-//	}
-//
-//	vkBindBufferMemory(logicalDevice_, _buffer, _bufferMemory, 0);
-//}
 //======================================================================================================================
 void Application::CopyBuffer(VkBuffer		_srcBuffer,
 							 VkBuffer		_dstBuffer,
@@ -917,6 +881,10 @@ void Application::Cleanup()
 		vkDestroySemaphore(logicalDevice_,	imageAvailableSemaphores_[i],	nullptr);
 		vkDestroyFence(logicalDevice_,		inFlightFences_[i],				nullptr);
 	}
+
+	uniformBuffers_.clear();
+	vertexBuffer_.reset();
+	indexBuffer_.reset(); 
 
 	vkDestroyCommandPool(logicalDevice_, commandPool_, nullptr);
 
@@ -1163,14 +1131,6 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Application::DebugCallback_(VkDebugUtilsMessageSe
 
 	return VK_FALSE;
 }
-////======================================================================================================================
-//void Application::FramebufferResizeCallback(GLFWwindow*	_window,
-//											int			_width,
-//											int			_height)
-//{
-//	auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(_window));
-//	app->framebufferResized_ = true;
-//}
 //======================================================================================================================
 std::vector<char> Application::ReadFile_(const std::string& _filename)
 {

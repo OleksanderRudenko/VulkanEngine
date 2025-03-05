@@ -7,7 +7,7 @@
 class ENGINE_API Buffer
 {
 public:
-	Buffer(VkDeviceSize size,
+	Buffer(VkDeviceSize							size,
 		    std::reference_wrapper<VkDevice>	logicalDevice);
 	Buffer(const Buffer&)				= delete;
 	Buffer(Buffer&&)					= delete;
@@ -19,7 +19,7 @@ public:
 	bool					CreateBuffer(const VkPhysicalDevice&,
 										 VkBufferUsageFlags,
 										 VkMemoryPropertyFlags);
-	uint32_t				FindMemoryType(const VkPhysicalDevice&,
+	static uint32_t			FindMemoryType(const VkPhysicalDevice&,
 										   uint32_t typeFilter,
 										   VkMemoryPropertyFlags);
 
