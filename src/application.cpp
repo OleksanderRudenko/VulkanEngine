@@ -579,7 +579,10 @@ void Application::CreateVertexBuffer()
 	vertexBuffer_.get()->CreateBuffer(physicalDevice_,
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	CopyBuffer(stagingBuffer.GetBuffer(), vertexBuffer_.get()->GetBuffer(), vertexBuffer_.get()->GetSize());
+	CommandBuffer commandBuffer(std::ref(logicalDevice_), std::ref(physicalDevice_), indices_);
+	commandBuffer.CreateBuffer(commandPool_.get());
+	commandBuffer.CopyBuffer(stagingBuffer.GetBuffer(), vertexBuffer_->GetBuffer(), vertexBuffer_->GetSize());
+	commandBuffer.SubmitAndWaitIdle(graphicsQueue_);
 }
 //======================================================================================================================
 void Application::CreateIndexBuffer()
@@ -598,7 +601,10 @@ void Application::CreateIndexBuffer()
 	indexBuffer_.get()->CreateBuffer(physicalDevice_,
 									 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 									 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer_.get()->GetBuffer(), indexBuffer_.get()->GetSize());
+	CommandBuffer commandBuffer(std::ref(logicalDevice_), std::ref(physicalDevice_), indices_);
+	commandBuffer.CreateBuffer(commandPool_.get());
+	commandBuffer.CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer_->GetBuffer(), indexBuffer_->GetSize());
+	commandBuffer.SubmitAndWaitIdle(graphicsQueue_);
 }
 //======================================================================================================================
 void Application::CreateUniformBuffers()
@@ -744,42 +750,6 @@ VkShaderModule  Application::CreateShaderModule(const std::vector<char>& _code)
 	}
 
 	return shaderModule;
-}
-//======================================================================================================================
-void Application::CopyBuffer(VkBuffer		_srcBuffer,
-							 VkBuffer		_dstBuffer,
-							 VkDeviceSize	_size)
-{
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType					= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level					= VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool			= commandPool_.get()->GetPool();
-	allocInfo.commandBufferCount	= 1;
-
-	VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(logicalDevice_, &allocInfo, &commandBuffer);
-
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-	VkBufferCopy copyRegion{};
-	copyRegion.size = _size;
-	vkCmdCopyBuffer(commandBuffer, _srcBuffer, _dstBuffer, 1, &copyRegion);
-
-	vkEndCommandBuffer(commandBuffer);
-
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
-
-	vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(graphicsQueue_);
-
-	vkFreeCommandBuffers(logicalDevice_, commandPool_.get()->GetPool(), 1, &commandBuffer);
 }
 //======================================================================================================================
 void Application::MainLoop()

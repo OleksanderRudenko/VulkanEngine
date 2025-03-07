@@ -25,8 +25,14 @@ public:
 	CommandBuffer&	operator=(const CommandBuffer&)	= delete;
 	CommandBuffer&	operator=(CommandBuffer&&)		= delete;
 
-	bool					CreateBuffer(CommandPool*);
 	const VkCommandBuffer&	GetBuffer() const		{ return commandBuffer_; }
+	bool					CreateBuffer(CommandPool*);
+	bool					CopyBuffer(VkBuffer		src,
+									   VkBuffer		dst,
+									   VkDeviceSize	size);
+	bool					Begin(VkCommandBufferUsageFlags usage = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+	bool					End();
+	void					SubmitAndWaitIdle(VkQueue);
 
 private:
 	const std::reference_wrapper<VkDevice>			logicalDevice_;

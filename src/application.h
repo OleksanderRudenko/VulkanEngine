@@ -54,11 +54,6 @@ private:
 	
 	VkShaderModule 	CreateShaderModule(const std::vector<char>& code);
 
-	// static function in Buffer class?
-	void			CopyBuffer(VkBuffer srcBuffer,
-							   VkBuffer dstBuffer,
-							   VkDeviceSize size);
-
 	void			MainLoop();
 	void			DrawFrame();
 	void			Cleanup();
