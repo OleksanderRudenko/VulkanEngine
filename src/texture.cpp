@@ -4,9 +4,13 @@
 #include <stb_image.h>
 #include <iostream>
 
+namespace xengine
+{
+
+//======================================================================================================================
 Texture::Texture()
 {}
-
+//======================================================================================================================
 bool Texture::Create(const std::string&					_path,
 					 std::reference_wrapper<VkDevice>	_logicalDevice,
 					 const VkPhysicalDevice&			_physicalDevice)
@@ -69,4 +73,6 @@ bool Texture::Create(const std::string&					_path,
 	vkBindImageMemory(_logicalDevice, image_, imageMemory_, 0);
 
 	return true;
+}
+
 }

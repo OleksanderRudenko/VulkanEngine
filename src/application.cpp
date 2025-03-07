@@ -7,6 +7,9 @@
 #include <fstream>
 #include <set>
 
+namespace xengine
+{
+
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
@@ -167,6 +170,7 @@ void Application::PickPhysicalDevice()
 	vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
 	for (const auto& device : devices)
 	{
+		indices_ = FindQueueFamilies(device);
 		if (IsDeviceSuitable_(device))
 		{
 			physicalDevice_ = device;
@@ -182,10 +186,8 @@ void Application::PickPhysicalDevice()
 //======================================================================================================================
 void Application::CreateLogicalDevice()
 {
-	QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
-
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-	std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+	std::set<uint32_t> uniqueQueueFamilies = {indices_.graphicsFamily.value(), indices_.presentFamily.value()};
 
 	float queuePriority = 1.0f;
 	for (uint32_t queueFamily : uniqueQueueFamilies)
@@ -226,8 +228,8 @@ void Application::CreateLogicalDevice()
 		throw std::runtime_error("failed to create logical device!");
 	}
 
-	vkGetDeviceQueue(logicalDevice_, indices.graphicsFamily.value(), 0, &graphicsQueue_);
-	vkGetDeviceQueue(logicalDevice_, indices.presentFamily.value(), 0, &presentQueue_);
+	vkGetDeviceQueue(logicalDevice_, indices_.graphicsFamily.value(), 0, &graphicsQueue_);
+	vkGetDeviceQueue(logicalDevice_, indices_.presentFamily.value(), 0, &presentQueue_);
 }
 //======================================================================================================================
 void Application::CreateSwapChain()
@@ -548,16 +550,10 @@ void Application::CreateFramebuffers()
 //======================================================================================================================
 void Application::CreateCommandPool()
 {
-	QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(physicalDevice_);
-
-	VkCommandPoolCreateInfo poolInfo{};
-	poolInfo.sType				= VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	poolInfo.flags				= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	poolInfo.queueFamilyIndex	= queueFamilyIndices.graphicsFamily.value();
-	if (vkCreateCommandPool(logicalDevice_, &poolInfo, nullptr, &commandPool_) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create command pool!");
-	}
+	commandPool_ = std::make_unique<CommandPool>(std::ref(logicalDevice_),
+												 std::ref(physicalDevice_),
+												 indices_);
+	commandPool_.get()->CreatePool();
 }
 //======================================================================================================================
 void Application::CreateTextureImage()
@@ -674,20 +670,21 @@ void Application::CreateDescriptorSets()
 	}
 }
 //======================================================================================================================
-void Application::CreateCommandBuffer()
+bool Application::CreateCommandBuffer()
 {
-	commandBuffers_.resize(MAX_FRAMES_IN_FLIGHT);
+	commandBuffers_.reserve(MAX_FRAMES_IN_FLIGHT);
 
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType					= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool			= commandPool_;
-	allocInfo.level					= VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount	= (uint32_t) commandBuffers_.size();
-
-	if (vkAllocateCommandBuffers(logicalDevice_, &allocInfo, commandBuffers_.data()) != VK_SUCCESS)
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		throw std::runtime_error("failed to allocate command buffers!");
+		commandBuffers_.emplace_back(std::make_unique<CommandBuffer>(std::ref(logicalDevice_),
+																	 std::ref(physicalDevice_),
+																	 indices_));
+		if(!commandBuffers_[i].get()->CreateBuffer(commandPool_.get()))
+		{
+			return false;
+		}
 	}
+	return true;
 }
 //======================================================================================================================
 void Application::CreateSyncObjects()
@@ -756,7 +753,7 @@ void Application::CopyBuffer(VkBuffer		_srcBuffer,
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType					= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level					= VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool			= commandPool_;
+	allocInfo.commandPool			= commandPool_.get()->GetPool();
 	allocInfo.commandBufferCount	= 1;
 
 	VkCommandBuffer commandBuffer;
@@ -782,7 +779,7 @@ void Application::CopyBuffer(VkBuffer		_srcBuffer,
 	vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(graphicsQueue_);
 
-	vkFreeCommandBuffers(logicalDevice_, commandPool_, 1, &commandBuffer);
+	vkFreeCommandBuffers(logicalDevice_, commandPool_.get()->GetPool(), 1, &commandBuffer);
 }
 //======================================================================================================================
 void Application::MainLoop()
@@ -816,8 +813,8 @@ void Application::DrawFrame()
 
 	vkResetFences(logicalDevice_, 1, &inFlightFences_[currentFrame_]);
 	
-	vkResetCommandBuffer(commandBuffers_[currentFrame_], /*VkCommandBufferResetFlagBits*/ 0);
-	RecordCommandBuffer(commandBuffers_[currentFrame_], imageIndex);
+	vkResetCommandBuffer(commandBuffers_[currentFrame_].get()->GetBuffer(), /*VkCommandBufferResetFlagBits*/ 0);
+	RecordCommandBuffer(commandBuffers_[currentFrame_].get()->GetBuffer(), imageIndex);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -828,7 +825,7 @@ void Application::DrawFrame()
 	submitInfo.pWaitSemaphores			= waitSemaphores;
 	submitInfo.pWaitDstStageMask		= waitStages;
 	submitInfo.commandBufferCount		= 1;
-	submitInfo.pCommandBuffers			= &commandBuffers_[currentFrame_];
+	submitInfo.pCommandBuffers			= &commandBuffers_[currentFrame_].get()->GetBuffer();
 
 	VkSemaphore signalSemaphores[]		= {renderFinishedSemaphores_[currentFrame_]};
 	submitInfo.signalSemaphoreCount		= 1;
@@ -884,9 +881,8 @@ void Application::Cleanup()
 
 	uniformBuffers_.clear();
 	vertexBuffer_.reset();
-	indexBuffer_.reset(); 
-
-	vkDestroyCommandPool(logicalDevice_, commandPool_, nullptr);
+	indexBuffer_.reset();
+	commandPool_.reset();
 
 	vkDestroyDevice(logicalDevice_, nullptr);
 
@@ -932,7 +928,7 @@ void Application::UpdateUniformBuffer(uint32_t _currentImage)
 }
 //======================================================================================================================
 void Application::RecordCommandBuffer(VkCommandBuffer	_commandBuffer,
-									   uint32_t			_imageIndex)
+									  uint32_t			_imageIndex)
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType				= VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1204,7 +1200,6 @@ VkExtent2D Application::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabi
 //======================================================================================================================
 bool Application::IsDeviceSuitable_(VkPhysicalDevice _device)
 {
-	QueueFamilyIndices indices	= FindQueueFamilies(_device);
 	bool extensionsSupported	= CheckDeviceExtensionSupport_(_device);
 
 	bool swapChainAdequate		= false;
@@ -1213,7 +1208,7 @@ bool Application::IsDeviceSuitable_(VkPhysicalDevice _device)
 		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(_device);
 		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 	}
-	return indices.isComplete() && extensionsSupported && swapChainAdequate;
+	return indices_.isComplete() && extensionsSupported && swapChainAdequate;
 }
 //======================================================================================================================
 bool Application::CheckDeviceExtensionSupport_(VkPhysicalDevice _device)
@@ -1233,4 +1228,6 @@ bool Application::CheckDeviceExtensionSupport_(VkPhysicalDevice _device)
 	}
 
 	return requiredExtensions.empty();
+}
+
 }

@@ -5,7 +5,8 @@
 #include <memory>
 #include <string>
 
-// add namespace
+namespace xengine
+{
 
 class Window
 {
@@ -42,3 +43,5 @@ private:
 	bool		isResizable_		= false;
 	bool		framebufferResized_	= false;
 };
+
+}

@@ -2,6 +2,9 @@
 #include "window.h"
 #include <iostream>
 
+namespace xengine
+{
+
 //======================================================================================================================
 Window::Window(uint32_t				_width,
 			   uint32_t				_height,
@@ -58,4 +61,6 @@ void Window::FramebufferResizeCallback(GLFWwindow*	_window,
 		instance->width_				= _width;
 		instance->height_				= _height;
 	}
+}
+
 }

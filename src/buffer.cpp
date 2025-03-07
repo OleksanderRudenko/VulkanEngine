@@ -2,6 +2,10 @@
 #include "buffer.h"
 #include <iostream>
 
+namespace xengine
+{
+
+//======================================================================================================================
 Buffer::Buffer(VkDeviceSize						_size,
 			   std::reference_wrapper<VkDevice>	_logicalDevice)
 : size_(_size)
@@ -63,4 +67,6 @@ uint32_t Buffer::FindMemoryType(const VkPhysicalDevice&	_physicalDevice,
 	}
 
 	throw std::runtime_error("failed to find suitable memory type!");
+}
+
 }

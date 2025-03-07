@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "vertex.h"
 
+namespace xengine
+{
+
 //======================================================================================================================
 VkVertexInputBindingDescription Vertex::GetBindingDescription()
 {
@@ -23,4 +26,6 @@ std::array<VkVertexInputAttributeDescription, 2> Vertex::GetAttributeDescription
 	attributeDescriptions[1].format		= VK_FORMAT_R32G32B32_SFLOAT;
 	attributeDescriptions[1].offset		= offsetof(Vertex, color);
 	return attributeDescriptions;
+}
+
 }

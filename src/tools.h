@@ -4,6 +4,9 @@
 #include <optional>
 #include <vulkan/vulkan.h>
 
+namespace xengine
+{
+
 struct QueueFamilyIndices
 {
 	std::optional<uint32_t> graphicsFamily;
@@ -21,3 +24,5 @@ struct SwapChainSupportDetails
 	std::vector<VkSurfaceFormatKHR>	formats;
 	std::vector<VkPresentModeKHR>	presentModes;
 };
+
+}

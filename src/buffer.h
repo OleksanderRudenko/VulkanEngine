@@ -4,6 +4,9 @@
 #include <vulkan/vulkan.h>
 #include <functional>
 
+namespace xengine
+{
+
 class ENGINE_API Buffer
 {
 public:
@@ -33,3 +36,5 @@ protected:
 	VkBuffer								buffer_			= VK_NULL_HANDLE;
 	VkDeviceMemory							bufferMemory_	= VK_NULL_HANDLE;
 };
+
+}

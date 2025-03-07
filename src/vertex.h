@@ -4,6 +4,9 @@
 #include <vulkan/vulkan.h>
 #include <array>
 
+namespace xengine
+{
+
 struct Vertex
 {
 	glm::vec2	pos;
@@ -22,3 +25,5 @@ const std::vector<Vertex> vertices =
 };
 
 const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
+
+}

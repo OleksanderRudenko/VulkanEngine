@@ -3,6 +3,9 @@
 #include <vulkan/vulkan.h>
 #include <string>
 
+namespace xengine
+{
+
 class Texture
 {
 public:
@@ -23,3 +26,5 @@ protected:
 	VkImage			image_;
 	VkDeviceMemory	imageMemory_;
 };
+
+}

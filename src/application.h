@@ -1,6 +1,8 @@
 #pragma once
 
 #include "buffer.h"
+#include "command_buffer.h"
+#include "command_pool.h"
 #include "texture.h"
 #include "tools.h"
 #include "vulkan_engine_lib.h"
@@ -8,6 +10,9 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+
+namespace xengine
+{
 
 class ENGINE_API Application
 {
@@ -43,7 +48,7 @@ private:
 	void			CreateUniformBuffers();
 	void			CreateDescriptorPool();
 	void			CreateDescriptorSets();
-	void			CreateCommandBuffer();
+	bool			CreateCommandBuffer();
 	void			CreateSyncObjects();
 	void			RecreateSwapChain();
 	
@@ -103,8 +108,8 @@ private:
 	VkRenderPass										renderPass_				= VK_NULL_HANDLE;
 	VkPipeline											graphicsPipeline_		= VK_NULL_HANDLE;
 
-	VkCommandPool										commandPool_			= VK_NULL_HANDLE;
-	std::vector<VkCommandBuffer>						commandBuffers_;
+	std::vector<std::unique_ptr<CommandBuffer>>			commandBuffers_;
+	std::unique_ptr<CommandPool>						commandPool_;
 
 	VkDescriptorPool									descriptorPool_			= VK_NULL_HANDLE;
 	std::vector<VkDescriptorSet>						descriptorSets_;
@@ -119,8 +124,12 @@ private:
 	std::vector<std::unique_ptr<Buffer>>				uniformBuffers_;
 	std::vector<void*>									uniformBuffersMapped_;
 
+	QueueFamilyIndices									indices_;
+
 	VkDebugUtilsMessengerEXT							debugMessenger_			= VK_NULL_HANDLE;
 
 	//move to texture class
 	Texture	texture_;
 };
+
+}

@@ -4,7 +4,7 @@
 
 int main()
 {
-	Application app(800, 600);
+	xengine::Application app(800, 600);
 	try {
 		if(!app.Init())
 		{
