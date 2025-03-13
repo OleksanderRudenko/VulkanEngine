@@ -22,7 +22,7 @@ public:
 	CommandPool&	operator=(const CommandPool&)	= delete;
 	CommandPool&	operator=(CommandPool&&)		= delete;
 
-	bool					CreatePool();
+	bool					Create();
 	const VkCommandPool&	GetPool()	const		{ return commandPool_; }
 
 private:

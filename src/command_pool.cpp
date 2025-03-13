@@ -15,10 +15,11 @@ CommandPool::CommandPool(std::reference_wrapper<VkDevice>			_logicalDevice,
 //======================================================================================================================
 CommandPool::~CommandPool()
 {
+	//all VkCommandBuffer instances in it are freed automatically
 	vkDestroyCommandPool(logicalDevice_, commandPool_, nullptr);
 }
 //======================================================================================================================
-bool CommandPool::CreatePool()
+bool CommandPool::Create()
 {
 	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType				= VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;

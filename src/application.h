@@ -30,19 +30,20 @@ public:
 	void			Run();
 
 private:
-	void			InitVulkan();
+	bool			InitVulkan();
 	void			CreateInstance();
 	void			CreateSurface();
 	void			PickPhysicalDevice();
 	void			CreateLogicalDevice();
 	void			CreateSwapChain();
-	void			CreateImageViews();
+	bool			CreateImageViews();
 	void			CreateRenderPass();
 	void			CreateDescriptorSetLayout();
 	void			CreateGraphicsPipeline();
 	void			CreateFramebuffers();
 	void			CreateCommandPool();
-	void			CreateTextureImage();
+	bool			CreateTextureImage();
+	bool			CreateTextureSampler();
 	void			CreateVertexBuffer();
 	void			CreateIndexBuffer();
 	void			CreateUniformBuffers();
@@ -123,8 +124,12 @@ private:
 
 	VkDebugUtilsMessengerEXT							debugMessenger_			= VK_NULL_HANDLE;
 
-	//move to texture class
-	Texture	texture_;
+
+	//test
+	VkSampler textureSampler_;
+	VkImageView textureImageView_;
+	std::unique_ptr<Texture> texture_;
+
 };
 
 }

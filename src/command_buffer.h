@@ -15,31 +15,33 @@ class CommandPool;
 class ENGINE_API CommandBuffer final
 {
 public:
-	CommandBuffer(std::reference_wrapper<VkDevice>			logicalDevice,
-				  std::reference_wrapper<VkPhysicalDevice>	physicalDevice,
+	CommandBuffer(std::reference_wrapper<VkDevice> logicalDevice,
+				  std::reference_wrapper<VkPhysicalDevice>,
 				  const QueueFamilyIndices&);
 	CommandBuffer(const CommandBuffer&)				= delete;
 	CommandBuffer(CommandBuffer&&)					= delete;
-	~CommandBuffer();
+	~CommandBuffer()								= default;
 
 	CommandBuffer&	operator=(const CommandBuffer&)	= delete;
 	CommandBuffer&	operator=(CommandBuffer&&)		= delete;
 
-	const VkCommandBuffer&	GetBuffer() const		{ return commandBuffer_; }
-	bool					CreateBuffer(CommandPool*);
+	const VkCommandBuffer&	GetBuffer() const		{ return buffer_; }
+	bool					Create(CommandPool*);
 	bool					CopyBuffer(VkBuffer		src,
 									   VkBuffer		dst,
-									   VkDeviceSize	size);
+									   VkDeviceSize);
 	bool					Begin(VkCommandBufferUsageFlags usage = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 	bool					End();
-	void					SubmitAndWaitIdle(VkQueue);
+	void					SubmitAndWaitIdle(VkQueue graphicsQueue);
+	//bool					BeginSingleTimeCommand(CommandPool*);
 
 private:
 	const std::reference_wrapper<VkDevice>			logicalDevice_;
 	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
 	const QueueFamilyIndices						indices_;
 
-	VkCommandBuffer									commandBuffer_ = VK_NULL_HANDLE;
+	VkCommandBuffer									buffer_			= VK_NULL_HANDLE;
+	std::atomic<bool>								isRecording_	= {false};
 };
 
 }

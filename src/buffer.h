@@ -10,8 +10,8 @@ namespace xengine
 class ENGINE_API Buffer
 {
 public:
-	Buffer(VkDeviceSize							size,
-		    std::reference_wrapper<VkDevice>	logicalDevice);
+	Buffer(VkDeviceSize,
+		   std::reference_wrapper<VkDevice> logicalDevice);
 	Buffer(const Buffer&)				= delete;
 	Buffer(Buffer&&)					= delete;
 	virtual ~Buffer();
