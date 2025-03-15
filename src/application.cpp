@@ -75,12 +75,11 @@ bool Application::CreateInstance()
 	return isCreated;
 }
 //======================================================================================================================
-void Application::CreateSurface()
+bool Application::CreateSurface()
 {
-	if (glfwCreateWindowSurface(instance_.get()->GetInstance(), window_.get()->GetWindow(), nullptr, &surface_) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create window surface!");
-	}
+	surface_		= std::make_unique<Surface>(*instance_, window_->GetWindow());
+	bool isCreated	= surface_->Create();
+	return isCreated;
 }
 //======================================================================================================================
 void Application::PickPhysicalDevice()
@@ -161,21 +160,20 @@ void Application::CreateLogicalDevice()
 //======================================================================================================================
 void Application::CreateSwapChain()
 {
-	SwapChainSupportDetails	swapChainSupport	= QuerySwapChainSupport(physicalDevice_);
+	VkSurfaceCapabilitiesKHR capabilities		= surface_.get()->GetCapabilities(std::ref(physicalDevice_));
+	VkSurfaceFormatKHR		surfaceFormat		= ChooseSwapSurfaceFormat(surface_.get()->GetFormats(std::ref(physicalDevice_)));
+	VkPresentModeKHR		presentMode			= ChooseSwapPresentMode(surface_.get()->GetPresentModes(std::ref(physicalDevice_)));
+	VkExtent2D				extent				= ChooseSwapExtent(capabilities);
 
-	VkSurfaceFormatKHR		surfaceFormat		= ChooseSwapSurfaceFormat(swapChainSupport.formats);
-	VkPresentModeKHR		presentMode			= ChooseSwapPresentMode(swapChainSupport.presentModes);
-	VkExtent2D				extent				= ChooseSwapExtent(swapChainSupport.capabilities);
-
-	uint32_t				imageCount			= swapChainSupport.capabilities.minImageCount + 1;
-	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+	uint32_t				imageCount			= surface_.get()->GetCapabilities(std::ref(physicalDevice_)).minImageCount + 1;
+	if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
 	{
-		imageCount = swapChainSupport.capabilities.maxImageCount;
+		imageCount = capabilities.maxImageCount;
 	}
 
 	VkSwapchainCreateInfoKHR createInfo{};
 	createInfo.sType			= VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	createInfo.surface			= surface_;
+	createInfo.surface			= surface_.get()->GetSurface();
 	createInfo.minImageCount	= imageCount;
 	createInfo.imageFormat		= surfaceFormat.format;
 	createInfo.imageColorSpace	= surfaceFormat.colorSpace;
@@ -198,7 +196,7 @@ void Application::CreateSwapChain()
 		createInfo.pQueueFamilyIndices		= nullptr;
 	}
 
-	createInfo.preTransform		= swapChainSupport.capabilities.currentTransform;
+	createInfo.preTransform		= capabilities.currentTransform;
 	createInfo.compositeAlpha	= VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 	createInfo.presentMode		= presentMode;
 	createInfo.clipped			= VK_TRUE;
@@ -823,7 +821,8 @@ void Application::Cleanup()
 
 	vkDestroyDevice(logicalDevice_, nullptr);
 
-	vkDestroySurfaceKHR(instance_.get()->GetInstance(), surface_, nullptr);
+	vkDestroySurfaceKHR(instance_.get()->GetInstance(), surface_.get()->GetSurface(), nullptr);
+	surface_.reset();
 	instance_.reset();
 }
 //======================================================================================================================
@@ -942,7 +941,7 @@ QueueFamilyIndices Application::FindQueueFamilies(VkPhysicalDevice _device)
 		}
 
 		VkBool32 presentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(_device, i, surface_, &presentSupport);
+		vkGetPhysicalDeviceSurfaceSupportKHR(_device, i, surface_.get()->GetSurface(), &presentSupport);
 
 		if (presentSupport)
 		{
@@ -958,32 +957,6 @@ QueueFamilyIndices Application::FindQueueFamilies(VkPhysicalDevice _device)
 	}
 
 	return indices;
-}
-//======================================================================================================================
-SwapChainSupportDetails Application::QuerySwapChainSupport(VkPhysicalDevice _device)
-{
-	SwapChainSupportDetails details;
-
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_device, surface_, &details.capabilities);
-
-	uint32_t formatCount;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(_device, surface_, &formatCount, nullptr);
-
-	if (formatCount != 0)
-	{
-		details.formats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(_device, surface_, &formatCount, details.formats.data());
-	}
-
-	uint32_t presentModeCount;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(_device, surface_, &presentModeCount, nullptr);
-
-	if (presentModeCount != 0)
-	{
-		details.presentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(_device, surface_, &presentModeCount, details.presentModes.data());
-	}
-	return details;
 }
 //======================================================================================================================
 std::vector<char> Application::ReadFile_(const std::string& _filename)
@@ -1063,8 +1036,9 @@ bool Application::IsDeviceSuitable_(VkPhysicalDevice _device)
 	bool swapChainAdequate		= false;
 	if (extensionsSupported)
 	{
-		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(_device);
-		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+		std::vector<VkSurfaceFormatKHR>	formats			= surface_.get()->GetFormats(_device);
+		std::vector<VkPresentModeKHR>	presentModes	= surface_.get()->GetPresentModes(_device);
+		swapChainAdequate = !formats.empty() && !presentModes.empty();
 	}
 
 	VkPhysicalDeviceFeatures supportedFeatures;

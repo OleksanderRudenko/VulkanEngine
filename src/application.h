@@ -4,6 +4,7 @@
 #include "buffer.h"
 #include "command_buffer.h"
 #include "command_pool.h"
+#include "surface.h"
 #include "texture.h"
 #include "tools.h"
 #include "vulkan_engine_lib.h"
@@ -33,7 +34,7 @@ public:
 private:
 	bool			InitVulkan();
 	bool			CreateInstance();
-	void			CreateSurface();
+	bool			CreateSurface();
 	void			PickPhysicalDevice();
 	void			CreateLogicalDevice();
 	void			CreateSwapChain();
@@ -66,7 +67,6 @@ private:
 
 	// Tool functions
 	QueueFamilyIndices			FindQueueFamilies(VkPhysicalDevice);
-	SwapChainSupportDetails		QuerySwapChainSupport(VkPhysicalDevice);
 	static std::vector<char>	ReadFile_(const std::string& filename);
 
 	// Swap chain functions
@@ -82,7 +82,9 @@ private:
 	VkPhysicalDevice									physicalDevice_			= VK_NULL_HANDLE;
 	VkDevice											logicalDevice_			= VK_NULL_HANDLE;
 	VkQueue												graphicsQueue_			= VK_NULL_HANDLE;
-	VkSurfaceKHR										surface_				= VK_NULL_HANDLE;
+
+	std::unique_ptr<Surface>							surface_;
+
 	VkQueue												presentQueue_			= VK_NULL_HANDLE;
 
 	VkSwapchainKHR										swapChain_				= VK_NULL_HANDLE;
