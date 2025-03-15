@@ -1,5 +1,6 @@
 #pragma once
 
+#include "instance.h"
 #include "buffer.h"
 #include "command_buffer.h"
 #include "command_pool.h"
@@ -31,7 +32,7 @@ public:
 
 private:
 	bool			InitVulkan();
-	void			CreateInstance();
+	bool			CreateInstance();
 	void			CreateSurface();
 	void			PickPhysicalDevice();
 	void			CreateLogicalDevice();
@@ -62,18 +63,10 @@ private:
 	void			UpdateUniformBuffer(uint32_t currentImage);
 
 	void			RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-	bool			CheckValidationLayerSupport();
-	void			SetupDebugMessenger();
 
 	// Tool functions
 	QueueFamilyIndices			FindQueueFamilies(VkPhysicalDevice);
 	SwapChainSupportDetails		QuerySwapChainSupport(VkPhysicalDevice);
-	std::vector<const char*>	GetRequiredExtensions_();
-	void						PopulateDebugMessengerCreateInfo_(VkDebugUtilsMessengerCreateInfoEXT&);
-	static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback_(VkDebugUtilsMessageSeverityFlagBitsEXT			messageSeverity,
-														 VkDebugUtilsMessageTypeFlagsEXT				messageType,
-														 const VkDebugUtilsMessengerCallbackDataEXT*	pCallbackData,
-														 void*											pUserData);
 	static std::vector<char>	ReadFile_(const std::string& filename);
 
 	// Swap chain functions
@@ -85,7 +78,7 @@ private:
 	bool			CheckDeviceExtensionSupport_(VkPhysicalDevice);
 
 	std::unique_ptr<Window>								window_;
-	VkInstance											instance_				= VK_NULL_HANDLE;
+	std::unique_ptr<Instance>							instance_;
 	VkPhysicalDevice									physicalDevice_			= VK_NULL_HANDLE;
 	VkDevice											logicalDevice_			= VK_NULL_HANDLE;
 	VkQueue												graphicsQueue_			= VK_NULL_HANDLE;
@@ -129,6 +122,8 @@ private:
 	VkSampler textureSampler_;
 	VkImageView textureImageView_;
 	std::unique_ptr<Texture> texture_;
+	// vector sprites
+	// pipeline
 
 };
 
