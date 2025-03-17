@@ -27,7 +27,7 @@ public:
 	Texture&	operator=(const Texture&)	= default;
 	Texture&	operator=(Texture&&)		= default;
 
-	const VkImage&		GetImage()			{ return image_;}
+	const VkImage&		GetImage()			{ return image_; }
 	bool				Create(const std::string& path);
 	void				TransitionImageLayout(VkFormat,
 											  VkImageLayout	oldLayout,
@@ -50,6 +50,7 @@ protected:
 	VkImage											image_			= VK_NULL_HANDLE;
 	VkDeviceMemory									imageMemory_	= VK_NULL_HANDLE;
 	VkImageView										imageView_		= VK_NULL_HANDLE;
+	VkSampler										sampler_		= VK_NULL_HANDLE;
 	std::unique_ptr<CommandBuffer>					commandBuffer_;
 	std::unique_ptr<Buffer>							stagingBuffer_;
 	int												width_		= 0;

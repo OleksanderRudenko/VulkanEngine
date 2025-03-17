@@ -10,6 +10,7 @@ namespace xengine
 {
 
 class CommandPool;
+struct QueueFamilyIndices;
 
 // Stores GPU commands
 class ENGINE_API CommandBuffer final

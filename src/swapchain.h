@@ -5,28 +5,50 @@
 #include <functional>
 #include <memory>
 
-class Swapchain
+namespace xengine
+{
+
+class Surface;
+class Window;
+
+class ENGINE_API Swapchain
 {
 public:
 	Swapchain(std::reference_wrapper<VkDevice> logicalDevice,
-				  std::reference_wrapper<VkPhysicalDevice>);
+			  std::reference_wrapper<VkPhysicalDevice>,
+			  std::reference_wrapper<Surface>,
+			  std::reference_wrapper<Window>);
 	Swapchain(const Swapchain&)				= delete;
 	Swapchain(Swapchain&&)					= delete;
-	~Swapchain()							= default;
+	~Swapchain();
 
 	Swapchain&	operator=(const Swapchain&)	= delete;
 	Swapchain&	operator=(Swapchain&&)		= delete;
 
 	bool		Create();
+	bool		CreateImageViews();
+	bool		CreateFramebuffers(VkRenderPass);
+	void		Recreate(VkRenderPass);
+
+	const VkSwapchainKHR&				GetSwapChain()				const { return chain_; }
+	const std::vector<VkFramebuffer>&	GetSwapChainFramebuffers()	const { return framebuffers_; }
+	VkFormat							GetSwapChainImageFormat()	const { return imageFormat_; }
+	VkExtent2D							GetSwapChainExtent()		const { return extent_; }
 
 private:
-	const std::reference_wrapper<VkDevice>				logicalDevice_;
-	const std::reference_wrapper<VkPhysicalDevice>		physicalDevice_;
+	void		Cleanup();
 
-	VkSwapchainKHR										swapChain_				= VK_NULL_HANDLE;
-	std::vector<VkImage>								swapChainImages_;
-	VkFormat											swapChainImageFormat_	= VK_FORMAT_UNDEFINED;
-	VkExtent2D											swapChainExtent_;
-	std::vector<VkImageView>							swapChainImageViews_;
-	std::vector<VkFramebuffer>							swapChainFramebuffers_;
+	const std::reference_wrapper<VkDevice>			logicalDevice_;
+	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
+	const std::reference_wrapper<Surface>			surface_;
+	const std::reference_wrapper<Window>			window_;
+
+	VkSwapchainKHR									chain_			= VK_NULL_HANDLE;
+	std::vector<VkImage>							images_;
+	VkFormat										imageFormat_	= VK_FORMAT_UNDEFINED;
+	VkExtent2D										extent_;
+	std::vector<VkImageView>						imageViews_;
+	std::vector<VkFramebuffer>						framebuffers_;
 };
+
+}

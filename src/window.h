@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vulkan_engine_lib.h"
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <memory>
@@ -8,7 +9,7 @@
 namespace xengine
 {
 
-class Window
+class ENGINE_API Window final
 {
 public:
 	Window(uint32_t				width,
@@ -16,7 +17,7 @@ public:
 		   const std::string&	name);
 	Window(const Window&)						= delete;
 	Window(Window&&)							= delete;
-	virtual ~Window();
+	~Window();
 
 	Window&		operator=(const Window&)		= delete;
 	Window&		operator=(Window&&)				= delete;

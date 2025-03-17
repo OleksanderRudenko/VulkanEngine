@@ -5,8 +5,8 @@
 #include "command_buffer.h"
 #include "command_pool.h"
 #include "surface.h"
+#include "swapchain.h"
 #include "texture.h"
-#include "tools.h"
 #include "vulkan_engine_lib.h"
 #include "window.h"
 #include <iostream>
@@ -37,12 +37,11 @@ private:
 	bool			CreateSurface();
 	void			PickPhysicalDevice();
 	void			CreateLogicalDevice();
-	void			CreateSwapChain();
-	bool			CreateImageViews();
+	bool			CreateSwapChain();
 	void			CreateRenderPass();
 	void			CreateDescriptorSetLayout();
 	void			CreateGraphicsPipeline();
-	void			CreateFramebuffers();
+	bool			CreateFramebuffers();
 	void			CreateCommandPool();
 	bool			CreateTextureImage();
 	bool			CreateTextureSampler();
@@ -60,13 +59,11 @@ private:
 	void			MainLoop();
 	void			DrawFrame();
 	void			Cleanup();
-	void			CleanupSwapChain();
 	void			UpdateUniformBuffer(uint32_t currentImage);
 
 	void			RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 	// Tool functions
-	QueueFamilyIndices			FindQueueFamilies(VkPhysicalDevice);
 	static std::vector<char>	ReadFile_(const std::string& filename);
 
 	// Swap chain functions
@@ -87,12 +84,7 @@ private:
 
 	VkQueue												presentQueue_			= VK_NULL_HANDLE;
 
-	VkSwapchainKHR										swapChain_				= VK_NULL_HANDLE;
-	std::vector<VkImage>								swapChainImages_;
-	VkFormat											swapChainImageFormat_	= VK_FORMAT_UNDEFINED;
-	VkExtent2D											swapChainExtent_;
-	std::vector<VkImageView>							swapChainImageViews_;
-	std::vector<VkFramebuffer>							swapChainFramebuffers_;
+	std::unique_ptr<Swapchain>							swapChain_;
 
 	VkPipelineLayout									pipelineLayout_			= VK_NULL_HANDLE;
 	VkDescriptorSetLayout								descriptorSetLayout_	= VK_NULL_HANDLE;
