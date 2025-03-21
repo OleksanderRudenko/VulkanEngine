@@ -12,7 +12,7 @@ namespace xengine
 Swapchain::Swapchain(std::reference_wrapper<VkDevice>			_logicalDevice,
 					 std::reference_wrapper<VkPhysicalDevice>	_physicalDevice,
 					 std::reference_wrapper<Surface>			_surface,
-					 const std::reference_wrapper<Window>		_window)
+					 std::shared_ptr<Window>					_window)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , surface_(_surface)
@@ -29,7 +29,7 @@ bool Swapchain::Create()
 	VkSurfaceCapabilitiesKHR capabilities		= surface_.get().GetCapabilities(std::ref(physicalDevice_));
 	VkSurfaceFormatKHR		surfaceFormat		= Surface::ChooseSwapSurfaceFormat(surface_.get().GetFormats(std::ref(physicalDevice_)));
 	VkPresentModeKHR		presentMode			= Surface::ChooseSwapPresentMode(surface_.get().GetPresentModes(std::ref(physicalDevice_)));
-	VkExtent2D				extent				= Surface::ChooseSwapExtent(capabilities, std::ref(window_));
+	VkExtent2D				extent				= Surface::ChooseSwapExtent(capabilities, *window_);
 
 	uint32_t				imageCount			= surface_.get().GetCapabilities(std::ref(physicalDevice_)).minImageCount + 1;
 	if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
@@ -97,11 +97,24 @@ bool Swapchain::CreateImageViews()
 
 	for (size_t i = 0; i < images_.size(); ++i)
 	{
-		VkImageView imageView = Texture::CreateTextureImageView(std::ref(logicalDevice_), images_.at(i), VK_FORMAT_R8G8B8A8_SRGB);
-		if(imageView == VK_NULL_HANDLE)
+		VkImageViewCreateInfo viewInfo{};
+		viewInfo.sType								= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewInfo.image								= images_.at(i);
+		viewInfo.viewType							= VK_IMAGE_VIEW_TYPE_2D;
+		viewInfo.format								= VK_FORMAT_R8G8B8A8_SRGB;
+		viewInfo.subresourceRange.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT;
+		viewInfo.subresourceRange.baseMipLevel		= 0;
+		viewInfo.subresourceRange.levelCount		= 1;
+		viewInfo.subresourceRange.baseArrayLayer	= 0;
+		viewInfo.subresourceRange.layerCount		= 1;
+
+		VkImageView imageView;
+		if (vkCreateImageView(logicalDevice_, &viewInfo, nullptr, &imageView) != VK_SUCCESS)
 		{
+			std::cout<< "failed to create texture image view!\n";
 			return false;
 		}
+
 		imageViews_[i] = imageView;
 	}
 	return true;
@@ -135,10 +148,10 @@ bool Swapchain::CreateFramebuffers(VkRenderPass _renderPass)
 void Swapchain::Recreate(VkRenderPass _renderPass)
 {
 	int width = 0, height = 0;
-	glfwGetFramebufferSize(window_.get().GetWindow(), &width, &height);
+	glfwGetFramebufferSize(window_->GetWindow(), &width, &height);
 	while (width == 0 || height == 0)
 	{
-		glfwGetFramebufferSize(window_.get().GetWindow(), &width, &height);
+		glfwGetFramebufferSize(window_->GetWindow(), &width, &height);
 		glfwWaitEvents();
 	}
 
@@ -146,7 +159,7 @@ void Swapchain::Recreate(VkRenderPass _renderPass)
 	
 	Cleanup();
 	Create();
-	CreateImageViews();
+	//CreateImageViews();
 	CreateFramebuffers(_renderPass);
 }
 //======================================================================================================================

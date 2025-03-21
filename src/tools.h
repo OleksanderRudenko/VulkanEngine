@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <optional>
+#include <fstream>
 #include <vulkan/vulkan.h>
 
 namespace xengine
@@ -17,5 +18,9 @@ struct QueueFamilyIndices
 		return graphicsFamily.has_value() && presentFamily.has_value();
 	}
 };
+
+std::vector<char>	ReadFile(const std::string& filename,
+							 std::ios_base::openmode mode = std::ios::ate | std::ios::binary);
+
 
 }

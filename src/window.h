@@ -31,6 +31,9 @@ public:
 	bool		FramebufferResized()	const	{ return framebufferResized_; }
 	void		FramebufferResizedReset()		{ framebufferResized_ = false; }
 
+	uint32_t	Width()					const	{ return width_; }
+	uint32_t	Height()				const	{ return height_; }
+
 private:
 	static void	FramebufferResizeCallback(GLFWwindow*	window,
 										  int			width,

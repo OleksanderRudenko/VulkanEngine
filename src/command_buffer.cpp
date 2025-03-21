@@ -15,7 +15,7 @@ CommandBuffer::CommandBuffer(std::reference_wrapper<VkDevice>			_logicalDevice,
 , indices_(_indices)
 {}
 //======================================================================================================================
-bool CommandBuffer::Create(CommandPool* _commandPool)
+bool CommandBuffer::Create(std::shared_ptr<CommandPool> _commandPool)
 {
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType					= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

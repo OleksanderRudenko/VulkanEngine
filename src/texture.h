@@ -27,20 +27,22 @@ public:
 	Texture&	operator=(const Texture&)	= default;
 	Texture&	operator=(Texture&&)		= default;
 
-	const VkImage&		GetImage()			{ return image_; }
+	const VkImage&		GetImage()		const	{ return image_; }
+	const VkImageView&	GetImageView()	const	{ return imageView_; }
+	const VkSampler&	GetSampler()	const	{ return sampler_; }
+	int					GetWidth()		const	{ return width_; }
+	int					GetHeight()		const	{ return height_; }
+
 	bool				Create(const std::string& path);
-	void				TransitionImageLayout(VkFormat,
+	bool				TransitionImageLayout(VkFormat,
 											  VkImageLayout	oldLayout,
 											  VkImageLayout	newLayout,
-											  CommandPool*,
+											  std::shared_ptr<CommandPool>,
 											  VkQueue		graphicsQueue);
-	void				CopyBufferToImage(CommandPool*,
+	void				CopyBufferToImage(std::shared_ptr<CommandPool>,
 										  VkQueue	graphicsQueue);
-	static VkImageView	CreateTextureImageView(std::reference_wrapper<VkDevice>	logicalDevice,
-											   const VkImage&,
-											   VkFormat);
-	static VkSampler	CreateTextureSampler(std::reference_wrapper<VkDevice>	logicalDevice,
-											 std::reference_wrapper<VkPhysicalDevice>);
+	bool				CreateTextureImageView(VkFormat format = VK_FORMAT_R8G8B8A8_SRGB);
+	bool				CreateTextureSampler();
 
 protected:
 	const std::reference_wrapper<VkDevice>			logicalDevice_;

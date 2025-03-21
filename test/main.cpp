@@ -10,6 +10,8 @@ int main()
 		{
 			return EXIT_FAILURE;
 		}
+		std::unique_ptr<xengine::Sprite> sprite = app.CreateSprite("../src/textures/test.png");
+		app.AddSprite(std::move(sprite));
 		app.Run();
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;

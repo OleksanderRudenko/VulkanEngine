@@ -21,6 +21,10 @@ Texture::Texture(std::reference_wrapper<VkDevice>			_logicalDevice,
 Texture::~Texture()
 {
 	vkDestroyImage(logicalDevice_, image_, nullptr);
+	vkDestroyImageView(logicalDevice_, imageView_, nullptr);
+	vkDestroySampler(logicalDevice_, sampler_, nullptr);
+	vkFreeMemory(logicalDevice_, imageMemory_, nullptr);
+
 }
 //======================================================================================================================
 bool Texture::Create(const std::string& _path)
@@ -85,11 +89,11 @@ bool Texture::Create(const std::string& _path)
 	return true;
 }
 //======================================================================================================================
-void Texture::TransitionImageLayout(VkFormat		_format,
-									VkImageLayout	_oldLayout,
-									VkImageLayout	_newLayout,
-									CommandPool*	_commandPool,
-									VkQueue			_graphicsQueue)
+bool Texture::TransitionImageLayout(VkFormat						_format,
+									VkImageLayout					_oldLayout,
+									VkImageLayout					_newLayout,
+									std::shared_ptr<CommandPool>	_commandPool,
+									VkQueue							_graphicsQueue)
 {
 	CommandBuffer commandBuffer(logicalDevice_, physicalDevice_, indices_);
 	commandBuffer.Create(_commandPool);
@@ -129,7 +133,8 @@ void Texture::TransitionImageLayout(VkFormat		_format,
 	}
 	else
 	{
-		throw std::invalid_argument("unsupported layout transition!");
+		std::cout<< "unsupported layout transition!\n";
+		return false;
 	}
 
 	vkCmdPipelineBarrier(commandBuffer.GetBuffer(),
@@ -143,10 +148,11 @@ void Texture::TransitionImageLayout(VkFormat		_format,
 						 1,
 						 &barrier);
 	commandBuffer.SubmitAndWaitIdle(_graphicsQueue);
+	return true;
 }
 //======================================================================================================================
-void Texture::CopyBufferToImage(CommandPool*	_commandPool,
-								VkQueue			_graphicsQueue)
+void Texture::CopyBufferToImage(std::shared_ptr<CommandPool>	_commandPool,
+								VkQueue							_graphicsQueue)
 {
 	commandBuffer_ = std::make_unique<CommandBuffer>(logicalDevice_, physicalDevice_, indices_);
 	commandBuffer_.get()->Create(_commandPool);
@@ -161,21 +167,24 @@ void Texture::CopyBufferToImage(CommandPool*	_commandPool,
 	region.imageSubresource.mipLevel		= 0;
 	region.imageSubresource.baseArrayLayer	= 0;
 	region.imageSubresource.layerCount		= 1;
-
-	region.imageOffset = {0, 0, 0};
-	region.imageExtent = {static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), 1};
+	region.imageOffset						= {0, 0, 0};
+	region.imageExtent						= {static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), 1};
 	vkCmdCopyBufferToImage(commandBuffer_.get()->GetBuffer(), stagingBuffer_.get()->GetBuffer(), image_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
 	commandBuffer_.get()->SubmitAndWaitIdle(_graphicsQueue);
 }
 //======================================================================================================================
-VkImageView Texture::CreateTextureImageView(std::reference_wrapper<VkDevice>	_logicalDevice,
-											const VkImage&						_image,
-											VkFormat							_format)
+bool Texture::CreateTextureImageView(VkFormat _format)
 {
+	if(image_ == VK_NULL_HANDLE)
+	{
+		std::cout << "failed to create texture image view, VkImage not initialized!\n";
+		return false;
+	}
+
 	VkImageViewCreateInfo viewInfo{};
 	viewInfo.sType								= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	viewInfo.image								= _image;
+	viewInfo.image								= image_;
 	viewInfo.viewType							= VK_IMAGE_VIEW_TYPE_2D;
 	viewInfo.format								= _format;
 	viewInfo.subresourceRange.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT;
@@ -184,20 +193,18 @@ VkImageView Texture::CreateTextureImageView(std::reference_wrapper<VkDevice>	_lo
 	viewInfo.subresourceRange.baseArrayLayer	= 0;
 	viewInfo.subresourceRange.layerCount		= 1;
 
-	VkImageView view;
-	if (vkCreateImageView(_logicalDevice, &viewInfo, nullptr, &view) != VK_SUCCESS)
+	if (vkCreateImageView(logicalDevice_, &viewInfo, nullptr, &imageView_) != VK_SUCCESS)
 	{
 		std::cout<< "failed to create texture image view!\n";
-		return VK_NULL_HANDLE;
+		return false;
 	}
-	return view;
+	return true;
 }
 //======================================================================================================================
-VkSampler Texture::CreateTextureSampler(std::reference_wrapper<VkDevice>			_logicalDevice,
-										std::reference_wrapper<VkPhysicalDevice>	_physicalDevice)
+bool Texture::CreateTextureSampler()
 {
 	VkPhysicalDeviceProperties properties{};
-	vkGetPhysicalDeviceProperties(_physicalDevice, &properties);
+	vkGetPhysicalDeviceProperties(physicalDevice_, &properties);
 
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType					= VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -214,13 +221,12 @@ VkSampler Texture::CreateTextureSampler(std::reference_wrapper<VkDevice>			_logi
 	samplerInfo.compareOp				= VK_COMPARE_OP_ALWAYS;
 	samplerInfo.mipmapMode				= VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-	VkSampler sampler;
-	if (vkCreateSampler(_logicalDevice, &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
+	if (vkCreateSampler(logicalDevice_, &samplerInfo, nullptr, &sampler_) != VK_SUCCESS)
 	{
 		std::cout<< "failed to create texture sampler!\n";
-		return VK_NULL_HANDLE;
+		return false;
 	}
-	return sampler;
+	return true;
 }
 
 }

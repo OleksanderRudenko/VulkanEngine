@@ -27,7 +27,7 @@ public:
 	CommandBuffer&	operator=(CommandBuffer&&)		= delete;
 
 	const VkCommandBuffer&	GetBuffer() const		{ return buffer_; }
-	bool					Create(CommandPool*);
+	bool					Create(std::shared_ptr<CommandPool>);
 	bool					CopyBuffer(VkBuffer		src,
 									   VkBuffer		dst,
 									   VkDeviceSize);

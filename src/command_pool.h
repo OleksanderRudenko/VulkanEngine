@@ -9,6 +9,7 @@ namespace xengine
 {
 
 //Manages memory for command buffers
+//One per thread
 class ENGINE_API CommandPool final
 {
 public:

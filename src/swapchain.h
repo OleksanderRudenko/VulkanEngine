@@ -17,7 +17,7 @@ public:
 	Swapchain(std::reference_wrapper<VkDevice> logicalDevice,
 			  std::reference_wrapper<VkPhysicalDevice>,
 			  std::reference_wrapper<Surface>,
-			  std::reference_wrapper<Window>);
+			  std::shared_ptr<Window>);
 	Swapchain(const Swapchain&)				= delete;
 	Swapchain(Swapchain&&)					= delete;
 	~Swapchain();
@@ -41,7 +41,7 @@ private:
 	const std::reference_wrapper<VkDevice>			logicalDevice_;
 	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
 	const std::reference_wrapper<Surface>			surface_;
-	const std::reference_wrapper<Window>			window_;
+	const std::shared_ptr<Window>					window_;
 
 	VkSwapchainKHR									chain_			= VK_NULL_HANDLE;
 	std::vector<VkImage>							images_;
