@@ -37,10 +37,17 @@ bool Buffer::CreateBuffer(const VkPhysicalDevice&	_physicalDevice,
 	VkMemoryRequirements memRequirements;
 	vkGetBufferMemoryRequirements(logicalDevice_, buffer_, &memRequirements);
 
+	std::optional<uint32_t> memoryType = FindMemoryType(_physicalDevice, memRequirements.memoryTypeBits, _properties);
+	if(!memoryType.has_value())
+	{
+		std::cout << "failed to find suitable memory type!\n";
+		return false;
+	}
+
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize	= memRequirements.size;
-	allocInfo.memoryTypeIndex	= FindMemoryType(_physicalDevice, memRequirements.memoryTypeBits, _properties);
+	allocInfo.memoryTypeIndex	= memoryType.value();
 
 	if (vkAllocateMemory(logicalDevice_, &allocInfo, nullptr, &bufferMemory_) != VK_SUCCESS)
 	{
@@ -52,9 +59,9 @@ bool Buffer::CreateBuffer(const VkPhysicalDevice&	_physicalDevice,
 	return true;
 }
 //======================================================================================================================
-uint32_t Buffer::FindMemoryType(const VkPhysicalDevice&	_physicalDevice,
-								uint32_t				_typeFilter,
-								VkMemoryPropertyFlags	_properties)
+std::optional<uint32_t> Buffer::FindMemoryType(const VkPhysicalDevice&	_physicalDevice,
+											   uint32_t					_typeFilter,
+											   VkMemoryPropertyFlags	_properties)
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(_physicalDevice, &memProperties);
@@ -66,7 +73,7 @@ uint32_t Buffer::FindMemoryType(const VkPhysicalDevice&	_physicalDevice,
 		}
 	}
 
-	throw std::runtime_error("failed to find suitable memory type!");
+	return {};
 }
 
 }

@@ -73,10 +73,17 @@ bool Texture::Create(const std::string& _path)
 	VkMemoryRequirements memRequirements;
 	vkGetImageMemoryRequirements(logicalDevice_, image_, &memRequirements);
 
+	std::optional<uint32_t> memoryType = Buffer::FindMemoryType(physicalDevice_, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	if(!memoryType.has_value())
+	{
+		std::cout << "failed to find suitable memory type!\n";
+		return false;
+	}
+
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType				= VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize	= memRequirements.size;
-	allocInfo.memoryTypeIndex	= Buffer::FindMemoryType(physicalDevice_, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	allocInfo.memoryTypeIndex	= memoryType.value();
 
 	if (vkAllocateMemory(logicalDevice_, &allocInfo, nullptr, &imageMemory_) != VK_SUCCESS)
 	{

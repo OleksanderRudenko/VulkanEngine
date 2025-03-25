@@ -3,6 +3,7 @@
 #include "vulkan_engine_lib.h"
 #include <vulkan/vulkan.h>
 #include <functional>
+#include <optional>
 
 namespace xengine
 {
@@ -19,16 +20,16 @@ public:
 	Buffer&	operator=(const Buffer&)	= delete;
 	Buffer&	operator=(Buffer&&)			= delete;
 
-	bool					CreateBuffer(const VkPhysicalDevice&,
-										 VkBufferUsageFlags,
-										 VkMemoryPropertyFlags);
-	static uint32_t			FindMemoryType(const VkPhysicalDevice&,
-										   uint32_t typeFilter,
-										   VkMemoryPropertyFlags);
+	bool							CreateBuffer(const VkPhysicalDevice&,
+												 VkBufferUsageFlags,
+												 VkMemoryPropertyFlags);
+	static std::optional<uint32_t>	FindMemoryType(const VkPhysicalDevice&,
+												   uint32_t typeFilter,
+												   VkMemoryPropertyFlags);
 
-	VkDeviceSize			GetSize()			const { return size_; }
-	const VkBuffer&			GetBuffer()			const { return buffer_; }
-	const VkDeviceMemory&	GetBufferMemory()	const { return bufferMemory_; }
+	VkDeviceSize					GetSize()			const { return size_; }
+	const VkBuffer&					GetBuffer()			const { return buffer_; }
+	const VkDeviceMemory&			GetBufferMemory()	const { return bufferMemory_; }
 
 protected:
 	const std::reference_wrapper<VkDevice>	logicalDevice_;
