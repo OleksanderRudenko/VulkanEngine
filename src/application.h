@@ -81,14 +81,9 @@ private:
 	VkDescriptorSetLayout								descriptorSetLayout_	= VK_NULL_HANDLE;
 	VkPipeline											graphicsPipeline_		= VK_NULL_HANDLE;
 
-	std::vector<std::unique_ptr<CommandBuffer>>			commandBuffers_;
-	std::shared_ptr<CommandPool>						commandPool_;
-
 	VkDescriptorPool									descriptorPool_			= VK_NULL_HANDLE;
 
 	QueueFamilyIndices									indices_;
-
-	VkDebugUtilsMessengerEXT							debugMessenger_			= VK_NULL_HANDLE;
 
 	std::vector<std::shared_ptr<Sprite>>				sprites_;
 	std::unique_ptr<Pipeline>							pipeline_;

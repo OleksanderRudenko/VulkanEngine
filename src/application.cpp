@@ -220,14 +220,6 @@ bool Application::CreateFramebuffers()
 	return swapChain_.get()->CreateFramebuffers(pipeline_->GetRenderPass()->GetRenderPass());
 }
 //======================================================================================================================
-void Application::CreateCommandPool()
-{
-	commandPool_ = std::make_shared<CommandPool>(std::ref(logicalDevice_),
-												 std::ref(physicalDevice_),
-												 indices_);
-	commandPool_.get()->Create();
-}
-//======================================================================================================================
 void Application::CreateDescriptorPool()
 {
 	std::array<VkDescriptorPoolSize, 2> poolSizes{};
@@ -292,7 +284,6 @@ void Application::Cleanup()
 	vkDestroyPipelineLayout(logicalDevice_, pipelineLayout_, nullptr);
 	vkDestroyPipelineLayout(logicalDevice_, pipelineLayout_, nullptr);
 
-	commandPool_.reset();
 	surface_.reset();
 	pipeline_.reset();
 
