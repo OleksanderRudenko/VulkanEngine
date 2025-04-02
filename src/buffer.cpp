@@ -52,7 +52,7 @@ bool Buffer::CreateBuffer(const VkPhysicalDevice&	_physicalDevice,
 	if (vkAllocateMemory(logicalDevice_, &allocInfo, nullptr, &bufferMemory_) != VK_SUCCESS)
 	{
 		std::cout << "failed to allocate buffer memory!\n";
-		throw std::runtime_error("failed to allocate buffer memory!");
+		return false;
 	}
 
 	vkBindBufferMemory(logicalDevice_, buffer_, bufferMemory_, 0);

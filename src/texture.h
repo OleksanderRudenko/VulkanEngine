@@ -33,7 +33,9 @@ public:
 	int					GetWidth()		const	{ return width_; }
 	int					GetHeight()		const	{ return height_; }
 
-	bool				Create(const std::string& path);
+	bool				Create(const std::string& path,
+							   VkFormat format = VK_FORMAT_R8G8B8A8_SRGB,
+							   VkImageUsageFlags flags = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 	bool				TransitionImageLayout(VkFormat,
 											  VkImageLayout	oldLayout,
 											  VkImageLayout	newLayout,
@@ -41,7 +43,8 @@ public:
 											  VkQueue		graphicsQueue);
 	void				CopyBufferToImage(std::shared_ptr<CommandPool>,
 										  VkQueue	graphicsQueue);
-	bool				CreateTextureImageView(VkFormat format = VK_FORMAT_R8G8B8A8_SRGB);
+	bool				CreateTextureImageView(VkFormat format = VK_FORMAT_R8G8B8A8_SRGB,
+											   VkImageAspectFlags flags = VK_IMAGE_ASPECT_COLOR_BIT);
 	bool				CreateTextureSampler();
 
 protected:

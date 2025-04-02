@@ -24,10 +24,11 @@ Texture::~Texture()
 	vkDestroyImageView(logicalDevice_, imageView_, nullptr);
 	vkDestroySampler(logicalDevice_, sampler_, nullptr);
 	vkFreeMemory(logicalDevice_, imageMemory_, nullptr);
-
 }
 //======================================================================================================================
-bool Texture::Create(const std::string& _path)
+bool Texture::Create(const std::string& _path,
+					 VkFormat			_format,
+					 VkImageUsageFlags	_usageFlags)
 {
 	int texChannels;
 	stbi_uc* pixels = stbi_load(_path.c_str(), &width_, &height_, &texChannels, STBI_rgb_alpha);
@@ -57,10 +58,10 @@ bool Texture::Create(const std::string& _path)
 	imageInfo.extent.depth	= 1;
 	imageInfo.mipLevels		= 1;
 	imageInfo.arrayLayers	= 1;
-	imageInfo.format		= VK_FORMAT_R8G8B8A8_SRGB;
+	imageInfo.format		= _format; //VK_FORMAT_R8G8B8A8_SRGB;
 	imageInfo.tiling		= VK_IMAGE_TILING_OPTIMAL;
 	imageInfo.initialLayout	= VK_IMAGE_LAYOUT_UNDEFINED;
-	imageInfo.usage			= VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageInfo.usage			= _usageFlags;
 	imageInfo.samples		= VK_SAMPLE_COUNT_1_BIT;
 	imageInfo.sharingMode	= VK_SHARING_MODE_EXCLUSIVE;
 
@@ -181,7 +182,8 @@ void Texture::CopyBufferToImage(std::shared_ptr<CommandPool>	_commandPool,
 	commandBuffer_.get()->SubmitAndWaitIdle(_graphicsQueue);
 }
 //======================================================================================================================
-bool Texture::CreateTextureImageView(VkFormat _format)
+bool Texture::CreateTextureImageView(VkFormat			_format,
+									 VkImageAspectFlags	_aspectFlags)
 {
 	if(image_ == VK_NULL_HANDLE)
 	{
@@ -194,7 +196,7 @@ bool Texture::CreateTextureImageView(VkFormat _format)
 	viewInfo.image								= image_;
 	viewInfo.viewType							= VK_IMAGE_VIEW_TYPE_2D;
 	viewInfo.format								= _format;
-	viewInfo.subresourceRange.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT;
+	viewInfo.subresourceRange.aspectMask		= _aspectFlags;
 	viewInfo.subresourceRange.baseMipLevel		= 0;
 	viewInfo.subresourceRange.levelCount		= 1;
 	viewInfo.subresourceRange.baseArrayLayer	= 0;

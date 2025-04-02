@@ -43,6 +43,8 @@ private:
 	uint32_t	height_				= 0;
 	std::string	name_;
 
+	// todo: add Surface member here
+	//std::unique_ptr<Surface> surface_;
 	std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow*)>>	window_;
 	bool		isResizable_		= false;
 	bool		framebufferResized_	= false;

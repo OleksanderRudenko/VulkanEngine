@@ -83,9 +83,11 @@ void RenderPass::Render(VkCommandBuffer								_commandBuffer,
 	renderPassInfo.renderArea.extent	= swapChain_.get().GetSwapChainExtent();
 
 	// VkClearValue ? move into pipeline
-	VkClearValue clearColor			= { { 0.0f, 0.0f, 0.0f, 1.0f } };
-	renderPassInfo.clearValueCount	= 1;
-	renderPassInfo.pClearValues		= &clearColor;
+	std::array<VkClearValue, 2> clearValues{};
+	clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+	clearValues[1].depthStencil = { 1.0f, 0 }; //clearValues[0].depthStencil is ignored
+	renderPassInfo.clearValueCount	= 2;
+	renderPassInfo.pClearValues		= clearValues.data();
 
 	vkCmdBeginRenderPass(_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdBindPipeline(_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline_->GetPipeline());
@@ -106,19 +108,24 @@ void RenderPass::Render(VkCommandBuffer								_commandBuffer,
 
 	for (const auto& sprite : _sprites)
 	{
+		sprite->UpdateUbo();
+	}
+
+	for (const auto& sprite : _sprites)
+	{
 		VkBuffer vertexBuffers[]	= { sprite.get()->GetVertexBuffer()->GetBuffer()};
 		VkDeviceSize offsets[]		= { 0 };
 		vkCmdBindVertexBuffers(_commandBuffer, 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(_commandBuffer, sprite.get()->GetIndexBuffer()->GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
 		vkCmdBindDescriptorSets(_commandBuffer,
-						VK_PIPELINE_BIND_POINT_GRAPHICS,
-						graphicsPipeline_->GetPipelineLayout(),
-						0,
-						1,
-						&sprite.get()->GetDescriptorSet(),
-						0,
-						nullptr);
-		sprite->UpdateUbo();
+								VK_PIPELINE_BIND_POINT_GRAPHICS,
+								graphicsPipeline_->GetPipelineLayout(),
+								0,
+								1,
+								&sprite.get()->GetDescriptorSet(),
+								0,
+								nullptr);
+		//sprite->UpdateUbo();
 		vkCmdDrawIndexed(_commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 	}
 

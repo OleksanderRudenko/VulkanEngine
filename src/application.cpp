@@ -282,7 +282,6 @@ void Application::Cleanup()
 	vkDestroyDescriptorSetLayout(logicalDevice_, descriptorSetLayout_, nullptr);
 
 	vkDestroyPipelineLayout(logicalDevice_, pipelineLayout_, nullptr);
-	vkDestroyPipelineLayout(logicalDevice_, pipelineLayout_, nullptr);
 
 	surface_.reset();
 	pipeline_.reset();

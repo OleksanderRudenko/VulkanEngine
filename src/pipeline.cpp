@@ -66,6 +66,7 @@ void Pipeline::RenderFrame(const std::vector<std::shared_ptr<Sprite>>&	_sprites,
 						   VkQueue										_presentQueue)
 {
 	vkWaitForFences(logicalDevice_, 1, &inFlightFences_[currentFrame_], VK_TRUE, UINT64_MAX);
+	vkResetFences(logicalDevice_, 1, &inFlightFences_[currentFrame_]);
 
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(logicalDevice_,
@@ -85,12 +86,6 @@ void Pipeline::RenderFrame(const std::vector<std::shared_ptr<Sprite>>&	_sprites,
 		throw std::runtime_error("failed to acquire swap chain image!");
 	}
 
-	//for (const auto& sprite : _sprites)
-	//{
-	//	sprite->UpdateUbo();
-	//}
-
-	vkResetFences(logicalDevice_, 1, &inFlightFences_[currentFrame_]);
 	vkResetCommandBuffer(commandBuffers_[currentFrame_].get()->GetBuffer(), /*VkCommandBufferResetFlagBits*/ 0);
 	RecordCommandBuffer(commandBuffers_[currentFrame_].get()->GetBuffer(), imageIndex, _sprites);
 

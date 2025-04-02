@@ -44,9 +44,9 @@ private:
 	const std::shared_ptr<Window>					window_;
 
 	VkSwapchainKHR									chain_			= VK_NULL_HANDLE;
-	std::vector<VkImage>							images_;
 	VkFormat										imageFormat_	= VK_FORMAT_UNDEFINED;
 	VkExtent2D										extent_;
+	std::vector<VkImage>							images_;
 	std::vector<VkImageView>						imageViews_;
 	std::vector<VkFramebuffer>						framebuffers_;
 };

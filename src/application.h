@@ -47,7 +47,6 @@ private:
 
 	void			CreateDescriptorSetLayout();
 	bool			CreateFramebuffers();
-	void			CreateCommandPool();
 
 	void			CreateDescriptorPool();
 	

@@ -111,10 +111,10 @@ bool GraphicsPipeline::Create(VkRenderPass _renderPass)
 		VK_DYNAMIC_STATE_SCISSOR
 	};
 
-    VkPipelineDynamicStateCreateInfo dynamicState{};
-    dynamicState.sType                = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicState.dynamicStateCount    = static_cast<uint32_t>(dynamicStates.size());
-    dynamicState.pDynamicStates       = dynamicStates.data();
+	VkPipelineDynamicStateCreateInfo dynamicState{};
+	dynamicState.sType				= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicState.dynamicStateCount	= static_cast<uint32_t>(dynamicStates.size());
+	dynamicState.pDynamicStates		= dynamicStates.data();
 
 
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
@@ -143,9 +143,6 @@ bool GraphicsPipeline::Create(VkRenderPass _renderPass)
 		std::cout << "failed to create descriptor set layout!!\n";
 		return false;
 	}
-
-
-
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -192,6 +189,7 @@ void GraphicsPipeline::Cleanup()
 {
 	vkDestroyPipeline(logicalDevice_.get(), graphicsPipeline_, nullptr);
 	vkDestroyPipelineLayout(logicalDevice_.get(), pipelineLayout_, nullptr);
+	vkDestroyDescriptorSetLayout(logicalDevice_.get(), descriptorSetLayout_, nullptr);
 }
 //======================================================================================================================
 VkShaderModule GraphicsPipeline::CreateShaderModule(const std::vector<char>& code)
@@ -202,7 +200,7 @@ VkShaderModule GraphicsPipeline::CreateShaderModule(const std::vector<char>& cod
 	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(logicalDevice_.get(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+	if (vkCreateShaderModule(logicalDevice_, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
 	{
 		std::cout << "failed to create shader module!\n";
 		return VK_NULL_HANDLE;
