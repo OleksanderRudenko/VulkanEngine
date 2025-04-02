@@ -15,11 +15,9 @@ namespace xengine
 //======================================================================================================================
 Sprite::Sprite(std::reference_wrapper<VkDevice>			_logicalDevice,
 			   std::reference_wrapper<VkPhysicalDevice>	_physicalDevice,
-			   std::shared_ptr<Window>					_window,
 			   const QueueFamilyIndices&				_queueFamilyIndices)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
-, window_(_window)
 , queueFamilyIndices_(_queueFamilyIndices)
 {}
 //======================================================================================================================

@@ -40,7 +40,7 @@ void Application::Run()
 //======================================================================================================================
 std::unique_ptr<Sprite> Application::CreateSprite(const std::string& _path)
 {
-	std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>(logicalDevice_, physicalDevice_, window_, indices_);
+	std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>(logicalDevice_, physicalDevice_, indices_);
 	sprite->Create(_path, pipeline_->GetCommandPool(), descriptorSetLayout_, graphicsQueue_);
 	return sprite;
 }

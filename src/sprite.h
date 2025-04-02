@@ -21,7 +21,6 @@ class Sprite : public GameObject
 public:
 	Sprite(std::reference_wrapper<VkDevice> logicalDevice,
 		   std::reference_wrapper<VkPhysicalDevice>,
-		   std::shared_ptr<Window>,
 		   const QueueFamilyIndices&);
 	Sprite(const Sprite&)				= default;
 	Sprite(Sprite&&)					= default;
@@ -52,7 +51,6 @@ private:
 
 	const std::reference_wrapper<VkDevice>			logicalDevice_;
 	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
-	std::shared_ptr<Window>							window_; //todo: remove, pass w h into UpdateUbo
 	const QueueFamilyIndices&						queueFamilyIndices_;
 
 	std::unique_ptr<Texture>						texture_;
