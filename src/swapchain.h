@@ -33,7 +33,7 @@ public:
 	const VkSwapchainKHR&				GetSwapChain()				const { return chain_; }
 	const std::vector<VkFramebuffer>&	GetSwapChainFramebuffers()	const { return framebuffers_; }
 	VkFormat							GetSwapChainImageFormat()	const { return imageFormat_; }
-	VkExtent2D							GetSwapChainExtent()		const { return extent_; }
+	const VkExtent2D&					GetSwapChainExtent()		const { return extent_; }
 
 private:
 	void		Cleanup();

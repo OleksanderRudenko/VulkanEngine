@@ -32,18 +32,18 @@ public:
 
 	bool					Create(const std::string& texturePath,
 								   std::shared_ptr<CommandPool>,
-								   VkDescriptorPool,
 								   VkDescriptorSetLayout,
 								   VkQueue);
+	virtual void			UpdateUbo(const VkExtent2D& extent) override;
 
-	virtual void			UpdateUbo() override;
 	const VkDescriptorSet&	GetDescriptorSet()	const { return descriptorSet_; }
 	const Buffer*			GetVertexBuffer()	const { return vertexBuffer_.get(); }
 	const Buffer*			GetIndexBuffer()	const { return indexBuffer_.get(); }
 	const Texture*			GetTexture()		const { return texture_.get(); }
 
 private:
-	bool					CreateDescriptorSet(VkDescriptorPool, VkDescriptorSetLayout);
+	bool					CreateDescriptorPool();
+	bool					CreateDescriptorSet(VkDescriptorSetLayout);
 	void					CreateVertexBuffer(std::shared_ptr<CommandPool>,
 											   VkQueue graphicsQueue);
 	void					CreateIndexBuffer(std::shared_ptr<CommandPool>,
@@ -61,6 +61,7 @@ private:
 	std::unique_ptr<Buffer>							indexBuffer_;
 	std::unique_ptr<Buffer>							uniformBuffer_;
 	void*											uniformBufferMapped_;
+	VkDescriptorPool								descriptorPool_ = VK_NULL_HANDLE;
 
 	UniformBufferObject								ubo_	= {};
 };

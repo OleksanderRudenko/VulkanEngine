@@ -52,10 +52,15 @@ protected:
 	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
 	const QueueFamilyIndices						indices_;
 
-	VkImage											image_			= VK_NULL_HANDLE;
-	VkDeviceMemory									imageMemory_	= VK_NULL_HANDLE;
-	VkImageView										imageView_		= VK_NULL_HANDLE;
-	VkSampler										sampler_		= VK_NULL_HANDLE;
+	VkImage											image_				= VK_NULL_HANDLE;
+	VkDeviceMemory									imageMemory_		= VK_NULL_HANDLE;
+	VkImageView										imageView_			= VK_NULL_HANDLE;
+	VkSampler										sampler_			= VK_NULL_HANDLE;
+
+	VkImage											depthImage_			= VK_NULL_HANDLE;;
+	VkDeviceMemory									depthImageMemory_	= VK_NULL_HANDLE;;
+	VkImageView										depthImageView_		= VK_NULL_HANDLE;;
+
 	std::unique_ptr<CommandBuffer>					commandBuffer_;
 	std::unique_ptr<Buffer>							stagingBuffer_;
 	int												width_		= 0;

@@ -29,11 +29,11 @@ Sprite::~Sprite()
 	indexBuffer_.reset();
 	uniformBuffer_.reset();
 	texture_.reset();
+	vkDestroyDescriptorPool(logicalDevice_, descriptorPool_, nullptr);
 }
 //======================================================================================================================
 bool Sprite::Create(const std::string&				_texturePath,
 					std::shared_ptr<CommandPool>	_commandPool,
-					VkDescriptorPool				_descriptorPool,
 					VkDescriptorSetLayout			_descriptorSetLayout,
 					VkQueue							_graphicsQueue)
 {
@@ -64,40 +64,60 @@ bool Sprite::Create(const std::string&				_texturePath,
 	texture_.get()->CreateTextureImageView();
 	texture_.get()->CreateTextureSampler();
 	CreateUniformBuffer();
-	CreateDescriptorSet(_descriptorPool, _descriptorSetLayout);
+	CreateDescriptorPool();
+	CreateDescriptorSet(_descriptorSetLayout);
 	CreateVertexBuffer(_commandPool, _graphicsQueue);
 	CreateIndexBuffer(_commandPool, _graphicsQueue);
 	return true;
 }
 //======================================================================================================================
-void Sprite::UpdateUbo()
+void Sprite::UpdateUbo(const VkExtent2D& _extent)
 {
-	// TODO
-
+	float aspectRatio = (float)_extent.width / (float)_extent.height;
 	ubo_.model	= glm::translate(glm::mat4(1.0f), position_);
-	ubo_.view	= glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo_.proj	= glm::perspective(glm::radians(45.0f), window_->Width() / (float)window_->Height(), 0.1f, 10.0f);
+	ubo_.view	= glm::lookAt(glm::vec3(1.0f, 0.0f, 4.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+	float zoomFactor = 0.5f;
+	ubo_.proj = glm::ortho(-aspectRatio / zoomFactor, aspectRatio / zoomFactor, -1.0f / zoomFactor, 1.0f / zoomFactor, 0.1f, 10.0f);
+	ubo_.proj[1][1] *= -1;
+	memcpy(uniformBufferMapped_, &ubo_, sizeof(ubo_));
 
-
+	//ubo_.proj	= glm::perspective(glm::radians(60.0f), window_->Width() / (float)window_->Height(), 0.1f, 10.0f);
 	//ubo_.model = glm::translate(glm::mat4(1.0f), position_) * glm::scale(glm::mat4(1.0f), glm::vec3(texture_->GetWidth(), texture_->GetHeight(), 1.0f));
 	//ubo_.view	= glm::mat4(1.0f);
-	//ubo_.proj	= glm::ortho(0.0f, 800.0f, 600.0f, 0.0f, -1.0f, 1.0f);
-
-	ubo_.proj[1][1] *= -1;
-
-	memcpy(uniformBufferMapped_, &ubo_, sizeof(ubo_));
 }
 //======================================================================================================================
-bool Sprite::CreateDescriptorSet(VkDescriptorPool		_descriptorPool,
-								 VkDescriptorSetLayout	_descriptorSetLayout)
+bool Sprite::CreateDescriptorPool()
+{
+	std::array<VkDescriptorPoolSize, 2> poolSizes{};
+	poolSizes[0].type				= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSizes[0].descriptorCount	= 1;  // Only one per sprite
+	poolSizes[1].type				= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	poolSizes[1].descriptorCount	= 1;  // Only one per sprite
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+	poolInfo.pPoolSizes    = poolSizes.data();
+	poolInfo.maxSets       = 1;  // One set per sprite
+
+	if (vkCreateDescriptorPool(logicalDevice_, &poolInfo, nullptr, &descriptorPool_) != VK_SUCCESS)
+	{
+		std::cout << "failed to create descriptor pool!\n";
+		return false;
+	}
+	return true;
+}
+//======================================================================================================================
+bool Sprite::CreateDescriptorSet(VkDescriptorSetLayout	_descriptorSetLayout)
 {
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool		= _descriptorPool;
+	allocInfo.descriptorPool		= descriptorPool_;
 	allocInfo.descriptorSetCount	= 1;
 	allocInfo.pSetLayouts			= &_descriptorSetLayout;
 
-	if (vkAllocateDescriptorSets(logicalDevice_.get(), &allocInfo, &descriptorSet_) != VK_SUCCESS)
+	VkResult result = vkAllocateDescriptorSets(logicalDevice_.get(), &allocInfo, &descriptorSet_);
+	if (result != VK_SUCCESS)
 	{
 		std::cout << "failed to create descriptor set!\n";
 		return false;
