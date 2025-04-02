@@ -136,7 +136,7 @@ bool Swapchain::CreateFramebuffers(VkRenderPass _renderPass)
 		framebufferInfo.height			= extent_.height;
 		framebufferInfo.layers			= 1;
 
-		if (vkCreateFramebuffer(logicalDevice_, &framebufferInfo, nullptr, &framebuffers_[i]) != VK_SUCCESS)
+		if (vkCreateFramebuffer(logicalDevice_.get(), &framebufferInfo, nullptr, &framebuffers_[i]) != VK_SUCCESS)
 		{
 			std::cout << "failed to create framebuffer!\n";
 			return false;
@@ -159,7 +159,7 @@ void Swapchain::Recreate(VkRenderPass _renderPass)
 	
 	Cleanup();
 	Create();
-	//CreateImageViews();
+	CreateImageViews();
 	CreateFramebuffers(_renderPass);
 }
 //======================================================================================================================
