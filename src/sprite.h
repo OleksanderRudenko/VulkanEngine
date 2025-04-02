@@ -1,10 +1,9 @@
 #pragma once
 
+#include "game_object.h"
 #include "uniform.h"
 #include "vulkan_engine_lib.h"
-#include <vulkan/vulkan.h>
 #include <functional>
-#include <memory>
 #include <string>
 
 namespace xengine
@@ -17,7 +16,7 @@ class CommandPool;
 class Buffer;
 class Window;
 
-class Sprite
+class Sprite : public GameObject
 {
 public:
 	Sprite(std::reference_wrapper<VkDevice> logicalDevice,
@@ -37,13 +36,11 @@ public:
 								   VkDescriptorSetLayout,
 								   VkQueue);
 
-	void					UpdateUbo();
+	virtual void			UpdateUbo() override;
 	const VkDescriptorSet&	GetDescriptorSet()	const { return descriptorSet_; }
 	const Buffer*			GetVertexBuffer()	const { return vertexBuffer_.get(); }
 	const Buffer*			GetIndexBuffer()	const { return indexBuffer_.get(); }
 	const Texture*			GetTexture()		const { return texture_.get(); }
-
-	void					SetPosition(glm::vec3 _position) { position_ = _position; }
 
 private:
 	bool					CreateDescriptorSet(VkDescriptorPool, VkDescriptorSetLayout);
@@ -55,7 +52,7 @@ private:
 
 	const std::reference_wrapper<VkDevice>			logicalDevice_;
 	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
-	std::shared_ptr<Window>							window_;
+	std::shared_ptr<Window>							window_; //todo: remove, pass w h into UpdateUbo
 	const QueueFamilyIndices&						queueFamilyIndices_;
 
 	std::unique_ptr<Texture>						texture_;
@@ -66,9 +63,6 @@ private:
 	void*											uniformBufferMapped_;
 
 	UniformBufferObject								ubo_	= {};
-
-	glm::vec3										position_ = glm::vec3(0.0f);
-
 };
 
 }
