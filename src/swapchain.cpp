@@ -1,9 +1,11 @@
 #include "stdafx.h"
 #include "swapchain.h"
+#include "buffer.h"
 #include "surface.h"
 #include "texture.h"
 #include "window.h"
 #include <iostream>
+#include <array>
 
 namespace xengine
 {
@@ -117,6 +119,73 @@ bool Swapchain::CreateImageViews()
 
 		imageViews_[i] = imageView;
 	}
+
+	return true;
+}
+//======================================================================================================================
+bool Swapchain::CreateDepthImageViews()
+{
+	VkFormat depthFormat = FindDepthFormat(physicalDevice_);
+	depthImageViews_.resize(images_.size());
+
+	for (size_t i = 0; i < images_.size(); ++i)
+	{
+		VkImageCreateInfo imageInfo{};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageInfo.extent.width = extent_.width;
+		imageInfo.extent.height = extent_.height;
+		imageInfo.extent.depth = 1;
+		imageInfo.mipLevels = 1;
+		imageInfo.arrayLayers = 1;
+		imageInfo.format = depthFormat;
+		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		VkImage depthImage;
+		if (vkCreateImage(logicalDevice_, &imageInfo, nullptr, &depthImage) != VK_SUCCESS)
+		{
+			std::cout << "failed to create depth image!\n";
+			return false;
+		}
+
+		VkMemoryRequirements memRequirements;
+		vkGetImageMemoryRequirements(logicalDevice_, depthImage, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = Buffer::FindMemoryType(physicalDevice_, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT).value();
+
+		VkDeviceMemory depthImageMemory;
+		if (vkAllocateMemory(logicalDevice_, &allocInfo, nullptr, &depthImageMemory) != VK_SUCCESS)
+		{
+			std::cout << "failed to allocate depth image memory!\n";
+			return false;
+		}
+
+		vkBindImageMemory(logicalDevice_, depthImage, depthImageMemory, 0);
+
+		VkImageViewCreateInfo viewInfo{};
+		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewInfo.image = depthImage;
+		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		viewInfo.format = depthFormat;
+		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		viewInfo.subresourceRange.baseMipLevel = 0;
+		viewInfo.subresourceRange.levelCount = 1;
+		viewInfo.subresourceRange.baseArrayLayer = 0;
+		viewInfo.subresourceRange.layerCount = 1;
+
+		if (vkCreateImageView(logicalDevice_, &viewInfo, nullptr, &depthImageViews_[i]) != VK_SUCCESS)
+		{
+			std::cout << "failed to create depth image view!\n";
+			return false;
+		}
+	}
 	return true;
 }
 //======================================================================================================================
@@ -125,13 +194,17 @@ bool Swapchain::CreateFramebuffers(VkRenderPass _renderPass)
 	framebuffers_.resize(imageViews_.size());
 	for (size_t i = 0; i < imageViews_.size(); ++i)
 	{
-		VkImageView attachments[] = { imageViews_[i] };
+		std::array<VkImageView, 2> attachments =
+		{
+			imageViews_[i],
+			depthImageViews_[i]
+		};
 
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType			= VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferInfo.renderPass		= _renderPass;
-		framebufferInfo.attachmentCount	= 1;
-		framebufferInfo.pAttachments	= attachments;
+		framebufferInfo.attachmentCount	= static_cast<uint32_t>(attachments.size());
+		framebufferInfo.pAttachments	= attachments.data();
 		framebufferInfo.width			= extent_.width;
 		framebufferInfo.height			= extent_.height;
 		framebufferInfo.layers			= 1;
@@ -160,6 +233,7 @@ void Swapchain::Recreate(VkRenderPass _renderPass)
 	Cleanup();
 	Create();
 	CreateImageViews();
+	CreateDepthImageViews();
 	CreateFramebuffers(_renderPass);
 }
 //======================================================================================================================
@@ -173,6 +247,11 @@ void Swapchain::Cleanup()
 	for (auto imageView : imageViews_)
 	{
 		vkDestroyImageView(logicalDevice_, imageView, nullptr);
+	}
+
+	for (auto depthImageView : depthImageViews_)
+	{
+		vkDestroyImageView(logicalDevice_, depthImageView, nullptr);
 	}
 
 	vkDestroySwapchainKHR(logicalDevice_, chain_, nullptr);

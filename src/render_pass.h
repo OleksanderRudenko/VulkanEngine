@@ -18,6 +18,7 @@ class ENGINE_API RenderPass
 {
 public:
 	RenderPass(std::reference_wrapper<VkDevice> logicalDevice,
+			   std::reference_wrapper<VkPhysicalDevice>,
 			   std::reference_wrapper<Swapchain>);
 	RenderPass(const RenderPass&)				= delete;
 	RenderPass(RenderPass&&)					= delete;
@@ -35,11 +36,12 @@ public:
 	const VkRenderPass&	GetRenderPass()		const { return renderPass_; }
 
 private:
-	const std::reference_wrapper<VkDevice>	logicalDevice_;
-	const std::reference_wrapper<Swapchain>	swapChain_;
+	const std::reference_wrapper<VkDevice>			logicalDevice_;
+	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
+	const std::reference_wrapper<Swapchain>			swapChain_;
 
-	VkRenderPass							renderPass_			= VK_NULL_HANDLE;
-	std::unique_ptr<GraphicsPipeline>		graphicsPipeline_;
+	VkRenderPass									renderPass_			= VK_NULL_HANDLE;
+	std::unique_ptr<GraphicsPipeline>				graphicsPipeline_;
 };
 
 }

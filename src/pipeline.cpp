@@ -42,7 +42,7 @@ Pipeline::~Pipeline()
 //======================================================================================================================
 bool Pipeline::Create()
 {
-	renderPass_ = std::make_shared<RenderPass>(logicalDevice_, swapChain_);
+	renderPass_ = std::make_shared<RenderPass>(logicalDevice_, physicalDevice_, swapChain_);
 	if(!renderPass_.get()->Create())
 	{
 		return false;

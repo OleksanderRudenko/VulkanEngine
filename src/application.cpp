@@ -167,7 +167,7 @@ void Application::CreateLogicalDevice()
 bool Application::CreateSwapChain()
 {
 	swapChain_	= std::make_unique<Swapchain>(std::ref(logicalDevice_), std::ref(physicalDevice_), std::ref(*surface_), window_);
-	bool result = swapChain_.get()->Create() && swapChain_.get()->CreateImageViews();
+	bool result = swapChain_.get()->Create() && swapChain_.get()->CreateImageViews() && swapChain_.get()->CreateDepthImageViews();
 	return result;
 }
 //======================================================================================================================

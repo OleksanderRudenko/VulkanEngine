@@ -22,5 +22,12 @@ struct QueueFamilyIndices
 std::vector<char>	ReadFile(const std::string& filename,
 							 std::ios_base::openmode mode = std::ios::ate | std::ios::binary);
 
+VkFormat			FindSupportedFormat(std::reference_wrapper<VkPhysicalDevice>,
+										const std::vector<VkFormat>& candidates,
+										VkImageTiling,
+										VkFormatFeatureFlags);
+VkFormat			FindDepthFormat(std::reference_wrapper<VkPhysicalDevice>);
+
+bool				HasStencilComponent(VkFormat format);
 
 }

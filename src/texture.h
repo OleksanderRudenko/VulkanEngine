@@ -46,6 +46,8 @@ public:
 	bool				CreateTextureImageView(VkFormat format = VK_FORMAT_R8G8B8A8_SRGB,
 											   VkImageAspectFlags flags = VK_IMAGE_ASPECT_COLOR_BIT);
 	bool				CreateTextureSampler();
+	bool				CreateDepthImage(VkFormat depthFormat, VkExtent2D);
+	bool				CreateDepthImageView(VkFormat depthFormat);
 
 protected:
 	const std::reference_wrapper<VkDevice>			logicalDevice_;
@@ -57,9 +59,10 @@ protected:
 	VkImageView										imageView_			= VK_NULL_HANDLE;
 	VkSampler										sampler_			= VK_NULL_HANDLE;
 
-	VkImage											depthImage_			= VK_NULL_HANDLE;;
-	VkDeviceMemory									depthImageMemory_	= VK_NULL_HANDLE;;
-	VkImageView										depthImageView_		= VK_NULL_HANDLE;;
+	VkImage											depthImage_			= VK_NULL_HANDLE;
+	VkDeviceMemory									depthImageMemory_	= VK_NULL_HANDLE;
+	VkImageView										depthImageView_		= VK_NULL_HANDLE;
+	VkFormat										depthFormat_		= VK_FORMAT_UNDEFINED;
 
 	std::unique_ptr<CommandBuffer>					commandBuffer_;
 	std::unique_ptr<Buffer>							stagingBuffer_;

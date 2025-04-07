@@ -14,9 +14,9 @@ namespace xengine
 
 //======================================================================================================================
 Surface::Surface(std::reference_wrapper<Instance>	_instance,
-				 GLFWwindow*						_window)
-: instance_(_instance)
-, window_(_window)
+				 GLFWwindow* _window)
+	: instance_(_instance)
+	, window_(_window)
 {}
 //======================================================================================================================
 Surface::~Surface()
@@ -26,7 +26,7 @@ Surface::~Surface()
 //======================================================================================================================
 bool Surface::Create()
 {
-	if (glfwCreateWindowSurface(instance_.get(), window_, nullptr, &surface_) != VK_SUCCESS)
+	if(glfwCreateWindowSurface(instance_.get(), window_, nullptr, &surface_) != VK_SUCCESS)
 	{
 		std::cout << "failed to create window surface!\n";
 		return false;
@@ -46,7 +46,7 @@ std::vector<VkSurfaceFormatKHR> Surface::GetFormats(std::reference_wrapper<VkPhy
 	uint32_t formatCount;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(_device, surface_, &formatCount, nullptr);
 
-	if (formatCount != 0)
+	if(formatCount != 0)
 	{
 		formats_.resize(formatCount);
 		vkGetPhysicalDeviceSurfaceFormatsKHR(_device, surface_, &formatCount, formats_.data());
@@ -60,7 +60,7 @@ std::vector<VkPresentModeKHR> Surface::GetPresentModes(std::reference_wrapper<Vk
 	uint32_t presentModeCount;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(_device, surface_, &presentModeCount, nullptr);
 
-	if (presentModeCount != 0)
+	if(presentModeCount != 0)
 	{
 		presentModes_.resize(presentModeCount);
 		vkGetPhysicalDeviceSurfacePresentModesKHR(_device, surface_, &presentModeCount, presentModes_.data());
@@ -79,9 +79,9 @@ QueueFamilyIndices Surface::FindQueueFamilies(VkPhysicalDevice _device)
 	vkGetPhysicalDeviceQueueFamilyProperties(_device, &queueFamilyCount, queueFamilies.data());
 
 	int i = 0;
-	for (const auto& queueFamily : queueFamilies)
+	for(const auto& queueFamily : queueFamilies)
 	{
-		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
 			indices.graphicsFamily = i;
 		}
@@ -89,12 +89,12 @@ QueueFamilyIndices Surface::FindQueueFamilies(VkPhysicalDevice _device)
 		VkBool32 presentSupport = false;
 		vkGetPhysicalDeviceSurfaceSupportKHR(_device, i, surface_, &presentSupport);
 
-		if (presentSupport)
+		if(presentSupport)
 		{
 			indices.presentFamily = i;
 		}
 
-		if (indices.isComplete())
+		if(indices.isComplete())
 		{
 			break;
 		}
@@ -107,9 +107,9 @@ QueueFamilyIndices Surface::FindQueueFamilies(VkPhysicalDevice _device)
 //======================================================================================================================
 VkSurfaceFormatKHR Surface::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& _availableFormats)
 {
-	for (const auto& availableFormat : _availableFormats)
+	for(const auto& availableFormat : _availableFormats)
 	{
-		if (availableFormat.format == VK_FORMAT_R8G8B8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+		if(availableFormat.format == VK_FORMAT_R8G8B8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 		{
 			return availableFormat;
 		}
@@ -120,9 +120,9 @@ VkSurfaceFormatKHR Surface::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceF
 //======================================================================================================================
 VkPresentModeKHR Surface::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& _availablePresentModes)
 {
-	for (const auto& availablePresentMode : _availablePresentModes)
+	for(const auto& availablePresentMode : _availablePresentModes)
 	{
-		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+		if(availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
 		{
 			return availablePresentMode;
 		}
@@ -132,10 +132,10 @@ VkPresentModeKHR Surface::ChooseSwapPresentMode(const std::vector<VkPresentModeK
 }
 
 //======================================================================================================================
-VkExtent2D Surface::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR&	_capabilities,
-									 const Window&						_window)
+VkExtent2D Surface::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabilities,
+									 const Window& _window)
 {
-	if (_capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+	if(_capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
 		return _capabilities.currentExtent;
 	}
@@ -150,8 +150,8 @@ VkExtent2D Surface::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR&	_capabiliti
 			static_cast<uint32_t>(height)
 		};
 
-		actualExtent.width	= std::clamp(actualExtent.width, _capabilities.minImageExtent.width, _capabilities.maxImageExtent.width);
-		actualExtent.height	= std::clamp(actualExtent.height, _capabilities.minImageExtent.height, _capabilities.maxImageExtent.height);
+		actualExtent.width = std::clamp(actualExtent.width, _capabilities.minImageExtent.width, _capabilities.maxImageExtent.width);
+		actualExtent.height = std::clamp(actualExtent.height, _capabilities.minImageExtent.height, _capabilities.maxImageExtent.height);
 
 		return actualExtent;
 	}
