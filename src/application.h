@@ -6,6 +6,7 @@
 #include "command_pool.h"
 #include "device_manager.h"
 #include "pipeline.h"
+#include "resource_manager.h"
 #include "sprite.h"
 #include "surface.h"
 #include "swapchain.h"
@@ -44,11 +45,8 @@ private:
 	bool			CreateSwapChain();
 	bool			CreatePipeline();
 
-	bool			CreateDescriptorSetLayout();
 	bool			CreateFramebuffers();
 
-	bool			CreateDescriptorPool();
-	
 	VkShaderModule 	CreateShaderModule(const std::vector<char>& code);
 
 	void			MainLoop();
@@ -64,14 +62,11 @@ private:
 	std::unique_ptr<Instance>							instance_;
 	std::unique_ptr<Surface>							surface_;
 	std::unique_ptr<DeviceManager>						deviceManager_;
+	std::unique_ptr<ResourceManager>					resourceManager_;
 
 	std::unique_ptr<Swapchain>							swapChain_;
 
-	VkPipelineLayout									pipelineLayout_			= VK_NULL_HANDLE;
-	VkDescriptorSetLayout								descriptorSetLayout_	= VK_NULL_HANDLE;
 	VkPipeline											graphicsPipeline_		= VK_NULL_HANDLE;
-
-	VkDescriptorPool									descriptorPool_			= VK_NULL_HANDLE;
 
 	std::vector<std::shared_ptr<Sprite>>				sprites_;
 	std::unique_ptr<Pipeline>							pipeline_;

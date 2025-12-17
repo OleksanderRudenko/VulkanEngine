@@ -35,7 +35,7 @@ std::unique_ptr<Sprite> Application::CreateSprite(const std::string& _path)
 	std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>(deviceManager_->GetLogicalDevice(),
 															  deviceManager_->GetPhysicalDevice(),
 															  deviceManager_->GetQueueFamilyIndices());
-	sprite->Create(_path, pipeline_->GetCommandPool(), descriptorSetLayout_, deviceManager_->GetGraphicsQueue());
+	sprite->Create(_path, pipeline_->GetCommandPool(), resourceManager_->GetDescriptorSetLayout(), deviceManager_->GetGraphicsQueue());
 	return sprite;
 }
 //======================================================================================================================
@@ -56,11 +56,13 @@ bool Application::InitVulkan()
 		return false;
 	}
 
-	if(!CreateSwapChain())
+	resourceManager_ = std::make_unique<ResourceManager>(deviceManager_->GetLogicalDevice());
+	if(!resourceManager_->Create())
 	{
 		return false;
 	}
-	if(!CreateDescriptorSetLayout())
+
+	if(!CreateSwapChain())
 	{
 		return false;
 	}
@@ -69,10 +71,6 @@ bool Application::InitVulkan()
 		return false;
 	}
 	if(!CreateFramebuffers())
-	{
-		return false;
-	}
-	if(!CreateDescriptorPool())
 	{
 		return false;
 	}
@@ -110,7 +108,8 @@ bool Application::CreatePipeline()
 										   deviceManager_->GetPhysicalDevice(),
 										   swapChain_.get(),
 										   deviceManager_->GetQueueFamilyIndices(),
-										   window_);
+										   window_,
+										   resourceManager_.get());
 	if(!pipeline_->Create())
 	{
 		return false;
@@ -119,61 +118,9 @@ bool Application::CreatePipeline()
 }
 
 //======================================================================================================================
-bool Application::CreateDescriptorSetLayout()
-{
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding			= 0;
-	uboLayoutBinding.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount	= 1;
-	uboLayoutBinding.stageFlags			= VK_SHADER_STAGE_VERTEX_BIT;
-	uboLayoutBinding.pImmutableSamplers	= nullptr; // Optional
-
-	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.binding			= 1;
-	samplerLayoutBinding.descriptorCount	= 1;
-	samplerLayoutBinding.descriptorType		= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.pImmutableSamplers	= nullptr;
-	samplerLayoutBinding.stageFlags			= VK_SHADER_STAGE_FRAGMENT_BIT;
-
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount		= static_cast<uint32_t>(bindings.size());
-	layoutInfo.pBindings		= bindings.data();
-
-	if (vkCreateDescriptorSetLayout(deviceManager_->GetLogicalDevice(), &layoutInfo, nullptr, &descriptorSetLayout_) != VK_SUCCESS)
-	{
-		std::cout << "failed to create descriptor set layout!\n";
-		return false;
-	}
-	return true;
-}
-//======================================================================================================================
 bool Application::CreateFramebuffers()
 {
 	return swapChain_->CreateFramebuffers(pipeline_->GetRenderPass()->GetRenderPass());
-}
-//======================================================================================================================
-bool Application::CreateDescriptorPool()
-{
-	std::array<VkDescriptorPoolSize, 2> poolSizes{};
-	poolSizes[0].type				= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount	= static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	poolSizes[1].type				= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount	= static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount	= static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes		= poolSizes.data();
-	poolInfo.maxSets		= static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-	if (vkCreateDescriptorPool(deviceManager_->GetLogicalDevice(), &poolInfo, nullptr, &descriptorPool_) != VK_SUCCESS)
-	{
-		std::cout << "failed to create descriptor pool!\n";
-		return false;
-	}
-	return true;
 }
 //======================================================================================================================
 VkShaderModule  Application::CreateShaderModule(const std::vector<char>& _code)
@@ -216,27 +163,23 @@ bool Application::DrawFrame()
 //======================================================================================================================
 void Application::Cleanup()
 {
-	// 1. Clear sprites first - they depend on descriptorSetLayout_ and logicalDevice_
+	// 1. Clear sprites first - they depend on resourceManager's descriptorSetLayout and logicalDevice
 	sprites_.clear();
 
 	// 2. Destroy swapchain and pipeline
 	swapChain_.reset();
 	pipeline_.reset();
 
-	// 3. Destroy descriptor resources
-	vkDestroyDescriptorPool(deviceManager_->GetLogicalDevice(), descriptorPool_, nullptr);
-	vkDestroyDescriptorSetLayout(deviceManager_->GetLogicalDevice(), descriptorSetLayout_, nullptr);
+	// 3. Destroy resource manager (destroys descriptor layouts and pipeline layout)
+	resourceManager_.reset();
 
-	// 4. Destroy pipeline layout
-	vkDestroyPipelineLayout(deviceManager_->GetLogicalDevice(), pipelineLayout_, nullptr);
-
-	// 5. Destroy device manager (destroys logical device)
+	// 4. Destroy device manager (destroys logical device)
 	deviceManager_.reset();
 
-	// 6. Destroy surface (device depends on surface, so device destroyed first)
+	// 5. Destroy surface (device depends on surface, so device destroyed first)
 	surface_.reset();
 
-	// 7. Finally destroy instance (must be last)
+	// 6. Finally destroy instance (must be last)
 	instance_.reset();
 }
 //======================================================================================================================

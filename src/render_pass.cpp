@@ -2,6 +2,7 @@
 #include "render_pass.h"
 #include "buffer.h"
 #include "graphics_pipeline.h"
+#include "resource_manager.h"
 #include "sprite.h"
 #include "swapchain.h"
 #include "vertex.h"
@@ -13,10 +14,12 @@ namespace xengine
 //======================================================================================================================
 RenderPass::RenderPass(VkDevice			_logicalDevice,
 					   VkPhysicalDevice	_physicalDevice,
-					   Swapchain*		_swapChain)
+					   Swapchain*		_swapChain,
+					   ResourceManager*	_resourceManager)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , swapChain_(_swapChain)
+, resourceManager_(_resourceManager)
 {}
 //======================================================================================================================
 RenderPass::~RenderPass()
@@ -86,7 +89,9 @@ bool RenderPass::Create()
 	graphicsPipeline_ = std::make_unique<GraphicsPipeline>(logicalDevice_,
 														   swapChain_);
 
-	return graphicsPipeline_->Create(renderPass_);
+	return graphicsPipeline_->Create(renderPass_,
+									 resourceManager_->GetDescriptorSetLayout(),
+									 resourceManager_->GetPipelineLayout());
 }
 //======================================================================================================================
 bool RenderPass::Render(VkCommandBuffer								_commandBuffer,
@@ -137,7 +142,7 @@ bool RenderPass::Render(VkCommandBuffer								_commandBuffer,
 		vkCmdBindIndexBuffer(_commandBuffer, sprite->GetIndexBuffer()->GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
 		vkCmdBindDescriptorSets(_commandBuffer,
 								VK_PIPELINE_BIND_POINT_GRAPHICS,
-								graphicsPipeline_->GetPipelineLayout(),
+								resourceManager_->GetPipelineLayout(),
 								0,
 								1,
 								&sprite->GetDescriptorSet(),

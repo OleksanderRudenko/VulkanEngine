@@ -13,13 +13,15 @@ namespace xengine
 class Sprite;
 class Swapchain;
 class GraphicsPipeline;
+class ResourceManager;
 
 class ENGINE_API RenderPass
 {
 public:
 	RenderPass(VkDevice logicalDevice,
 			   VkPhysicalDevice physicalDevice,
-			   Swapchain* swapchain);
+			   Swapchain* swapchain,
+			   ResourceManager* resourceManager);
 	RenderPass(const RenderPass&)				= delete;
 	RenderPass(RenderPass&&)					= delete;
 	~RenderPass();
@@ -39,6 +41,7 @@ private:
 	VkDevice										logicalDevice_;
 	VkPhysicalDevice								physicalDevice_;
 	Swapchain*										swapChain_;
+	ResourceManager*								resourceManager_;
 
 	VkRenderPass									renderPass_			= VK_NULL_HANDLE;
 	std::unique_ptr<GraphicsPipeline>				graphicsPipeline_;

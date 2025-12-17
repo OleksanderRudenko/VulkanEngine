@@ -18,7 +18,9 @@ GraphicsPipeline::~GraphicsPipeline()
 	Cleanup();
 }
 //======================================================================================================================
-bool GraphicsPipeline::Create(VkRenderPass _renderPass)
+bool GraphicsPipeline::Create(VkRenderPass _renderPass,
+							  VkDescriptorSetLayout _descriptorSetLayout,
+							  VkPipelineLayout _pipelineLayout)
 {
 	auto vertShaderCode = ReadFile("../src/shaders/vert.spv");
 	auto fragShaderCode = ReadFile("../src/shaders/frag.spv");
@@ -122,48 +124,6 @@ bool GraphicsPipeline::Create(VkRenderPass _renderPass)
 	dynamicState.dynamicStateCount	= static_cast<uint32_t>(dynamicStates.size());
 	dynamicState.pDynamicStates		= dynamicStates.data();
 
-
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding			= 0;
-	uboLayoutBinding.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount	= 1;
-	uboLayoutBinding.stageFlags			= VK_SHADER_STAGE_VERTEX_BIT;
-	uboLayoutBinding.pImmutableSamplers	= nullptr; // Optional
-	uboLayoutBinding.stageFlags			= VK_SHADER_STAGE_VERTEX_BIT;
-
-	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.binding			= 1;
-	samplerLayoutBinding.descriptorCount	= 1;
-	samplerLayoutBinding.descriptorType		= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.pImmutableSamplers	= nullptr;
-	samplerLayoutBinding.stageFlags			= VK_SHADER_STAGE_FRAGMENT_BIT;
-
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount		= static_cast<uint32_t>(bindings.size());
-	layoutInfo.pBindings		= bindings.data();
-
-	if (vkCreateDescriptorSetLayout(logicalDevice_, &layoutInfo, nullptr, &descriptorSetLayout_) != VK_SUCCESS)
-	{
-		std::cout << "failed to create descriptor set layout!!\n";
-		return false;
-	}
-
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.sType					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount			= 1; // Optional
-	pipelineLayoutInfo.pSetLayouts				= &descriptorSetLayout_; // Optional
-	pipelineLayoutInfo.pushConstantRangeCount	= 0; // Optional
-	pipelineLayoutInfo.pPushConstantRanges		= nullptr; // Optional
-
-	if (vkCreatePipelineLayout(logicalDevice_, &pipelineLayoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS)
-	{
-		std::cout << "failed to create pipeline layout!\n";
-		return false;
-	}
-
 	VkPipelineDepthStencilStateCreateInfo depthStencil{};
 	depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	depthStencil.depthTestEnable = VK_TRUE;
@@ -184,7 +144,7 @@ bool GraphicsPipeline::Create(VkRenderPass _renderPass)
 	pipelineInfo.pColorBlendState		= &colorBlending;
 	pipelineInfo.pDepthStencilState		= &depthStencil;
 	pipelineInfo.pDynamicState			= &dynamicState;
-	pipelineInfo.layout					= pipelineLayout_;
+	pipelineInfo.layout					= _pipelineLayout;
 	pipelineInfo.renderPass				= _renderPass;
 	pipelineInfo.subpass				= 0;
 
@@ -203,8 +163,6 @@ bool GraphicsPipeline::Create(VkRenderPass _renderPass)
 void GraphicsPipeline::Cleanup()
 {
 	vkDestroyPipeline(logicalDevice_, graphicsPipeline_, nullptr);
-	vkDestroyPipelineLayout(logicalDevice_, pipelineLayout_, nullptr);
-	vkDestroyDescriptorSetLayout(logicalDevice_, descriptorSetLayout_, nullptr);
 }
 //======================================================================================================================
 VkShaderModule GraphicsPipeline::CreateShaderModule(const std::vector<char>& code)

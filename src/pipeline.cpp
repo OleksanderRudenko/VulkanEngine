@@ -16,12 +16,14 @@ Pipeline::Pipeline(VkDevice				_logicalDevice,
 				   VkPhysicalDevice		_physicalDevice,
 				   Swapchain*			_swapChain,
 				   const QueueFamilyIndices&	_indices,
-				   std::shared_ptr<Window>	_window)
+				   std::shared_ptr<Window>	_window,
+				   ResourceManager*		_resourceManager)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , swapChain_(_swapChain)
 , indices_(_indices)
 , window_(_window)
+, resourceManager_(_resourceManager)
 {}
 //======================================================================================================================
 Pipeline::~Pipeline()
@@ -40,7 +42,10 @@ Pipeline::~Pipeline()
 //======================================================================================================================
 bool Pipeline::Create()
 {
-	renderPass_ = std::make_shared<RenderPass>(logicalDevice_, physicalDevice_, swapChain_);
+	renderPass_ = std::make_shared<RenderPass>(logicalDevice_,
+											   physicalDevice_,
+											   swapChain_,
+											   resourceManager_);
 	if(!renderPass_->Create())
 	{
 		return false;

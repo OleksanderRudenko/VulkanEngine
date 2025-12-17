@@ -14,6 +14,7 @@ class CommandBuffer;
 class CommandPool;
 class Swapchain;
 class Window;
+class ResourceManager;
 struct QueueFamilyIndices;
 
 class ENGINE_API Pipeline
@@ -23,7 +24,8 @@ public:
 			 VkPhysicalDevice physicalDevice,
 			 Swapchain* swapchain,
 			 const QueueFamilyIndices& indices,
-			 std::shared_ptr<Window>);
+			 std::shared_ptr<Window>,
+			 ResourceManager* resourceManager);
 	Pipeline(const Pipeline&)				= delete;
 	Pipeline(Pipeline&&)					= delete;
 	~Pipeline();
@@ -51,6 +53,7 @@ private:
 	Swapchain*										swapChain_;
 	const QueueFamilyIndices&						indices_;
 	const std::shared_ptr<Window>					window_;
+	ResourceManager*								resourceManager_;
 
 	std::vector<VkSemaphore>							imageAvailableSemaphores_;
 	std::vector<VkSemaphore>							renderFinishedSemaphores_;
