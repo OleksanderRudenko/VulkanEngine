@@ -2,6 +2,7 @@
 #include "sprite.h"
 #include "buffer.h"
 #include "command_buffer.h"
+#include "resource_manager.h"
 #include "texture.h"
 #include "tools.h"
 #include "vertex.h"
@@ -13,8 +14,8 @@ namespace xengine
 {
 
 //======================================================================================================================
-Sprite::Sprite(VkDevice					_logicalDevice,
-			   VkPhysicalDevice			_physicalDevice,
+Sprite::Sprite(VkDevice						_logicalDevice,
+			   VkPhysicalDevice				_physicalDevice,
 			   const QueueFamilyIndices&	_queueFamilyIndices)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
@@ -34,12 +35,13 @@ Sprite::~Sprite()
 	uniformBuffer_.reset();
 
 	texture_.reset();
-	vkDestroyDescriptorPool(logicalDevice_, descriptorPool_, nullptr);
+	// Descriptor set is automatically freed when descriptor pool is destroyed
+	// Pool is managed by ResourceManager, so no cleanup needed here
 }
 //======================================================================================================================
 bool Sprite::Create(const std::string&				_texturePath,
 					std::shared_ptr<CommandPool>	_commandPool,
-					VkDescriptorSetLayout			_descriptorSetLayout,
+					ResourceManager*				_resourceManager,
 					VkQueue							_graphicsQueue)
 {
 	texture_ = std::make_unique<Texture>(logicalDevice_,
@@ -69,8 +71,7 @@ bool Sprite::Create(const std::string&				_texturePath,
 	texture_->CreateTextureImageView();
 	texture_->CreateTextureSampler();
 	CreateUniformBuffer();
-	CreateDescriptorPool();
-	CreateDescriptorSet(_descriptorSetLayout);
+	CreateDescriptorSet(_resourceManager);
 	CreateVertexBuffer(_commandPool, _graphicsQueue);
 	CreateIndexBuffer(_commandPool, _graphicsQueue);
 	return true;
@@ -91,40 +92,13 @@ void Sprite::UpdateUbo(const VkExtent2D& _extent)
 	//ubo_.view	= glm::mat4(1.0f);
 }
 //======================================================================================================================
-bool Sprite::CreateDescriptorPool()
+bool Sprite::CreateDescriptorSet(ResourceManager* _resourceManager)
 {
-	std::array<VkDescriptorPoolSize, 2> poolSizes{};
-	poolSizes[0].type				= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount	= 1;  // Only one per sprite
-	poolSizes[1].type				= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount	= 1;  // Only one per sprite
-
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes    = poolSizes.data();
-	poolInfo.maxSets       = 1;  // One set per sprite
-
-	if (vkCreateDescriptorPool(logicalDevice_, &poolInfo, nullptr, &descriptorPool_) != VK_SUCCESS)
+	// Allocate descriptor set from the shared pool managed by ResourceManager
+	descriptorSet_ = _resourceManager->AllocateDescriptorSet();
+	if (descriptorSet_ == VK_NULL_HANDLE)
 	{
-		std::cout << "failed to create descriptor pool!\n";
-		return false;
-	}
-	return true;
-}
-//======================================================================================================================
-bool Sprite::CreateDescriptorSet(VkDescriptorSetLayout	_descriptorSetLayout)
-{
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool		= descriptorPool_;
-	allocInfo.descriptorSetCount	= 1;
-	allocInfo.pSetLayouts			= &_descriptorSetLayout;
-
-	VkResult result = vkAllocateDescriptorSets(logicalDevice_, &allocInfo, &descriptorSet_);
-	if (result != VK_SUCCESS)
-	{
-		std::cout << "failed to create descriptor set!\n";
+		std::cout << "failed to allocate descriptor set from ResourceManager!\n";
 		return false;
 	}
 

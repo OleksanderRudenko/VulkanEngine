@@ -35,7 +35,7 @@ std::unique_ptr<Sprite> Application::CreateSprite(const std::string& _path)
 	std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>(deviceManager_->GetLogicalDevice(),
 															  deviceManager_->GetPhysicalDevice(),
 															  deviceManager_->GetQueueFamilyIndices());
-	sprite->Create(_path, pipeline_->GetCommandPool(), resourceManager_->GetDescriptorSetLayout(), deviceManager_->GetGraphicsQueue());
+	sprite->Create(_path, pipeline_->GetCommandPool(), resourceManager_.get(), deviceManager_->GetGraphicsQueue());
 	return sprite;
 }
 //======================================================================================================================

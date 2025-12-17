@@ -15,6 +15,7 @@ struct Vertex;
 class CommandPool;
 class Buffer;
 class Window;
+class ResourceManager;
 
 class Sprite : public GameObject
 {
@@ -31,7 +32,7 @@ public:
 
 	bool					Create(const std::string& texturePath,
 								   std::shared_ptr<CommandPool>,
-								   VkDescriptorSetLayout,
+								   ResourceManager*,
 								   VkQueue);
 	virtual void			UpdateUbo(const VkExtent2D& extent) override;
 
@@ -41,27 +42,25 @@ public:
 	const Texture*			GetTexture()		const { return texture_.get(); }
 
 private:
-	bool					CreateDescriptorPool();
-	bool					CreateDescriptorSet(VkDescriptorSetLayout);
+	bool					CreateDescriptorSet(ResourceManager*);
 	void					CreateVertexBuffer(std::shared_ptr<CommandPool>,
 											   VkQueue graphicsQueue);
 	void					CreateIndexBuffer(std::shared_ptr<CommandPool>,
 											  VkQueue graphicsQueue);
 	void					CreateUniformBuffer();
 
-	VkDevice										logicalDevice_;
-	VkPhysicalDevice								physicalDevice_;
-	const QueueFamilyIndices&						queueFamilyIndices_;
+	VkDevice					logicalDevice_;
+	VkPhysicalDevice			physicalDevice_;
+	const QueueFamilyIndices&	queueFamilyIndices_;
 
-	std::unique_ptr<Texture>						texture_;
-	VkDescriptorSet									descriptorSet_;
-	std::unique_ptr<Buffer>							vertexBuffer_;
-	std::unique_ptr<Buffer>							indexBuffer_;
-	std::unique_ptr<Buffer>							uniformBuffer_;
-	void*											uniformBufferMapped_;
-	VkDescriptorPool								descriptorPool_ = VK_NULL_HANDLE;
+	std::unique_ptr<Texture>	texture_;
+	VkDescriptorSet				descriptorSet_;
+	std::unique_ptr<Buffer>		vertexBuffer_;
+	std::unique_ptr<Buffer>		indexBuffer_;
+	std::unique_ptr<Buffer>		uniformBuffer_;
+	void*						uniformBufferMapped_;
 
-	UniformBufferObject								ubo_	= {};
+	UniformBufferObject			ubo_	= {};
 };
 
 }

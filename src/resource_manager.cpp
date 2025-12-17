@@ -13,6 +13,10 @@ ResourceManager::ResourceManager(VkDevice _logicalDevice)
 //======================================================================================================================
 ResourceManager::~ResourceManager()
 {
+	if (descriptorPool_ != VK_NULL_HANDLE)
+	{
+		vkDestroyDescriptorPool(logicalDevice_, descriptorPool_, nullptr);
+	}
 	if (descriptorSetLayout_ != VK_NULL_HANDLE)
 	{
 		vkDestroyDescriptorSetLayout(logicalDevice_, descriptorSetLayout_, nullptr);
@@ -30,6 +34,10 @@ bool ResourceManager::Create()
 		return false;
 	}
 	if (!CreatePipelineLayout())
+	{
+		return false;
+	}
+	if (!CreateDescriptorPool())
 	{
 		return false;
 	}
@@ -81,6 +89,46 @@ bool ResourceManager::CreatePipelineLayout()
 		return false;
 	}
 	return true;
+}
+//======================================================================================================================
+bool ResourceManager::CreateDescriptorPool()
+{
+	std::array<VkDescriptorPoolSize, 2> poolSizes{};
+	poolSizes[0].type				= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSizes[0].descriptorCount	= 100; // Support up to 100 sprites
+	poolSizes[1].type				= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	poolSizes[1].descriptorCount	= 100;
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount	= static_cast<uint32_t>(poolSizes.size());
+	poolInfo.pPoolSizes		= poolSizes.data();
+	poolInfo.maxSets		= 100; // Maximum number of descriptor sets
+
+	if (vkCreateDescriptorPool(logicalDevice_, &poolInfo, nullptr, &descriptorPool_) != VK_SUCCESS)
+	{
+		std::cout << "failed to create descriptor pool!\n";
+		return false;
+	}
+	return true;
+}
+//======================================================================================================================
+VkDescriptorSet ResourceManager::AllocateDescriptorSet()
+{
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool		= descriptorPool_;
+	allocInfo.descriptorSetCount	= 1;
+	allocInfo.pSetLayouts			= &descriptorSetLayout_;
+
+	VkDescriptorSet descriptorSet;
+	if (vkAllocateDescriptorSets(logicalDevice_, &allocInfo, &descriptorSet) != VK_SUCCESS)
+	{
+		std::cout << "failed to allocate descriptor set!\n";
+		return VK_NULL_HANDLE;
+	}
+
+	return descriptorSet;
 }
 
 }
