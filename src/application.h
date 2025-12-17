@@ -4,6 +4,7 @@
 #include "buffer.h"
 #include "command_buffer.h"
 #include "command_pool.h"
+#include "device_manager.h"
 #include "pipeline.h"
 #include "sprite.h"
 #include "surface.h"
@@ -40,8 +41,6 @@ private:
 	bool			InitVulkan();
 	bool			CreateInstance();
 	bool			CreateSurface();
-	bool			PickPhysicalDevice();
-	bool			CreateLogicalDevice();
 	bool			CreateSwapChain();
 	bool			CreatePipeline();
 
@@ -61,18 +60,10 @@ private:
 	VkPresentModeKHR			ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D					ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-	bool			IsDeviceSuitable_(VkPhysicalDevice);
-	bool			CheckDeviceExtensionSupport_(VkPhysicalDevice);
-
 	std::shared_ptr<Window>								window_;
 	std::unique_ptr<Instance>							instance_;
-	VkPhysicalDevice									physicalDevice_			= VK_NULL_HANDLE;
-	VkDevice											logicalDevice_			= VK_NULL_HANDLE;
-	VkQueue												graphicsQueue_			= VK_NULL_HANDLE;
-
 	std::unique_ptr<Surface>							surface_;
-
-	VkQueue												presentQueue_			= VK_NULL_HANDLE;
+	std::unique_ptr<DeviceManager>						deviceManager_;
 
 	std::unique_ptr<Swapchain>							swapChain_;
 
@@ -81,8 +72,6 @@ private:
 	VkPipeline											graphicsPipeline_		= VK_NULL_HANDLE;
 
 	VkDescriptorPool									descriptorPool_			= VK_NULL_HANDLE;
-
-	QueueFamilyIndices									indices_;
 
 	std::vector<std::shared_ptr<Sprite>>				sprites_;
 	std::unique_ptr<Pipeline>							pipeline_;
