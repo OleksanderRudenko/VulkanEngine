@@ -58,16 +58,15 @@ bool RenderPass::Create()
 	subpass.pipelineBindPoint		= VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount	= 1;
 	subpass.pColorAttachments		= &colorAttachmentRef;
-	subpass.pColorAttachments = &colorAttachmentRef;
 	subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass			= VK_SUBPASS_EXTERNAL;
 	dependency.dstSubpass			= 0;
-	dependency.srcStageMask			= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcStageMask			= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	dependency.srcAccessMask		= 0;
-	dependency.dstStageMask			= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependency.dstAccessMask		= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	dependency.dstStageMask			= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	dependency.dstAccessMask		= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 	std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
 	VkRenderPassCreateInfo renderPassInfo{};
@@ -90,7 +89,7 @@ bool RenderPass::Create()
 	return graphicsPipeline_->Create(renderPass_);
 }
 //======================================================================================================================
-void RenderPass::Render(VkCommandBuffer								_commandBuffer,
+bool RenderPass::Render(VkCommandBuffer								_commandBuffer,
 						uint32_t									_imageIndex,
 						const std::vector<std::shared_ptr<Sprite>>&	_sprites)
 {
@@ -132,16 +131,16 @@ void RenderPass::Render(VkCommandBuffer								_commandBuffer,
 
 	for (const auto& sprite : _sprites)
 	{
-		VkBuffer vertexBuffers[]	= { sprite.get()->GetVertexBuffer()->GetBuffer()};
+		VkBuffer vertexBuffers[]	= { sprite->GetVertexBuffer()->GetBuffer()};
 		VkDeviceSize offsets[]		= { 0 };
 		vkCmdBindVertexBuffers(_commandBuffer, 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(_commandBuffer, sprite.get()->GetIndexBuffer()->GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(_commandBuffer, sprite->GetIndexBuffer()->GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
 		vkCmdBindDescriptorSets(_commandBuffer,
 								VK_PIPELINE_BIND_POINT_GRAPHICS,
 								graphicsPipeline_->GetPipelineLayout(),
 								0,
 								1,
-								&sprite.get()->GetDescriptorSet(),
+								&sprite->GetDescriptorSet(),
 								0,
 								nullptr);
 		//sprite->UpdateUbo();
@@ -151,8 +150,10 @@ void RenderPass::Render(VkCommandBuffer								_commandBuffer,
 	vkCmdEndRenderPass(_commandBuffer);
 	if (vkEndCommandBuffer(_commandBuffer) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to record command buffer!");
+		std::cout << "failed to record command buffer!\n";
+		return false;
 	}
+	return true;
 }
 //======================================================================================================================
 void RenderPass::Cleanup()

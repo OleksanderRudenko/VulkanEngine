@@ -32,7 +32,7 @@ public:
 	Pipeline&	operator=(Pipeline&&)		= delete;
 
 	bool		Create();
-	void		RenderFrame(const std::vector<std::shared_ptr<Sprite>>&,
+	bool		RenderFrame(const std::vector<std::shared_ptr<Sprite>>&,
 							VkQueue graphicsQueue,
 							VkQueue	presentQueue);
 
@@ -42,7 +42,7 @@ public:
 private:
 	bool		CreateSyncObjects();
 	bool		CreateCommandBuffers();
-	void		RecordCommandBuffer(VkCommandBuffer,
+	bool		RecordCommandBuffer(VkCommandBuffer,
 									uint32_t imageIndex,
 									const std::vector<std::shared_ptr<Sprite>>& _sprites);
 

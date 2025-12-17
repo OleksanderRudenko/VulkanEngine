@@ -40,20 +40,20 @@ private:
 	bool			InitVulkan();
 	bool			CreateInstance();
 	bool			CreateSurface();
-	void			PickPhysicalDevice();
-	void			CreateLogicalDevice();
+	bool			PickPhysicalDevice();
+	bool			CreateLogicalDevice();
 	bool			CreateSwapChain();
 	bool			CreatePipeline();
 
-	void			CreateDescriptorSetLayout();
+	bool			CreateDescriptorSetLayout();
 	bool			CreateFramebuffers();
 
-	void			CreateDescriptorPool();
+	bool			CreateDescriptorPool();
 	
 	VkShaderModule 	CreateShaderModule(const std::vector<char>& code);
 
 	void			MainLoop();
-	void			DrawFrame();
+	bool			DrawFrame();
 	void			Cleanup();
 
 	// Swap chain functions

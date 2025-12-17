@@ -41,13 +41,13 @@ bool Texture::Create(const std::string& _path,
 	}
 
 	stagingBuffer_ = std::make_unique<Buffer>(imageSize, std::ref(logicalDevice_));
-	stagingBuffer_.get()->CreateBuffer(physicalDevice_,
+	stagingBuffer_->CreateBuffer(physicalDevice_,
 							   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 							   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	void* data;
-	vkMapMemory(logicalDevice_, stagingBuffer_.get()->GetBufferMemory(), 0, imageSize, 0, &data);
+	vkMapMemory(logicalDevice_, stagingBuffer_->GetBufferMemory(), 0, imageSize, 0, &data);
 	memcpy(data, pixels, static_cast<size_t>(imageSize));
-	vkUnmapMemory(logicalDevice_, stagingBuffer_.get()->GetBufferMemory());
+	vkUnmapMemory(logicalDevice_, stagingBuffer_->GetBufferMemory());
 	stbi_image_free(pixels);
 
 	VkImageCreateInfo imageInfo{};
@@ -163,8 +163,8 @@ void Texture::CopyBufferToImage(std::shared_ptr<CommandPool>	_commandPool,
 								VkQueue							_graphicsQueue)
 {
 	commandBuffer_ = std::make_unique<CommandBuffer>(logicalDevice_, physicalDevice_, indices_);
-	commandBuffer_.get()->Create(_commandPool);
-	commandBuffer_.get()->Begin();
+	commandBuffer_->Create(_commandPool);
+	commandBuffer_->Begin();
 
 	VkBufferImageCopy region{};
 	region.bufferOffset			= 0;
@@ -177,9 +177,9 @@ void Texture::CopyBufferToImage(std::shared_ptr<CommandPool>	_commandPool,
 	region.imageSubresource.layerCount		= 1;
 	region.imageOffset						= {0, 0, 0};
 	region.imageExtent						= {static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), 1};
-	vkCmdCopyBufferToImage(commandBuffer_.get()->GetBuffer(), stagingBuffer_.get()->GetBuffer(), image_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	vkCmdCopyBufferToImage(commandBuffer_->GetBuffer(), stagingBuffer_->GetBuffer(), image_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-	commandBuffer_.get()->SubmitAndWaitIdle(_graphicsQueue);
+	commandBuffer_->SubmitAndWaitIdle(_graphicsQueue);
 }
 //======================================================================================================================
 bool Texture::CreateTextureImageView(VkFormat			_format,

@@ -14,8 +14,6 @@ const std::vector<const char*> deviceExtensions =
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
-
 //======================================================================================================================
 Application::Application(uint32_t _width,
 						 uint32_t _height)
@@ -55,21 +53,34 @@ bool Application::InitVulkan()
 	{
 		return false;
 	}
-	PickPhysicalDevice();
-	CreateLogicalDevice();
-
+	if(!PickPhysicalDevice())
+	{
+		return false;
+	}
+	if(!CreateLogicalDevice())
+	{
+		return false;
+	}
 	if(!CreateSwapChain())
 	{
 		return false;
 	}
-	CreateDescriptorSetLayout();
-	CreatePipeline();
-
+	if(!CreateDescriptorSetLayout())
+	{
+		return false;
+	}
+	if(!CreatePipeline())
+	{
+		return false;
+	}
 	if(!CreateFramebuffers())
 	{
 		return false;
 	}
-	CreateDescriptorPool();
+	if(!CreateDescriptorPool())
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -88,20 +99,21 @@ bool Application::CreateSurface()
 	return isCreated;
 }
 //======================================================================================================================
-void Application::PickPhysicalDevice()
+bool Application::PickPhysicalDevice()
 {
 	uint32_t deviceCount = 0;
-	vkEnumeratePhysicalDevices(instance_.get()->GetInstance(), &deviceCount, nullptr);
+	vkEnumeratePhysicalDevices(instance_->GetInstance(), &deviceCount, nullptr);
 	if (deviceCount == 0)
 	{
-		throw std::runtime_error("failed to find GPUs with Vulkan support!");
+		std::cout << "failed to find GPUs with Vulkan support!\n";
+		return false;
 	}
 
 	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(instance_.get()->GetInstance(), &deviceCount, devices.data());
+	vkEnumeratePhysicalDevices(instance_->GetInstance(), &deviceCount, devices.data());
 	for (const auto& device : devices)
 	{
-		indices_ = surface_.get()->FindQueueFamilies(device);
+		indices_ = surface_->FindQueueFamilies(device);
 		if (IsDeviceSuitable_(device))
 		{
 			physicalDevice_ = device;
@@ -111,11 +123,13 @@ void Application::PickPhysicalDevice()
 
 	if (physicalDevice_ == VK_NULL_HANDLE)
 	{
-		throw std::runtime_error("failed to find a suitable GPU!");
+		std::cout << "failed to find a suitable GPU!\n";
+		return false;
 	}
+	return true;
 }
 //======================================================================================================================
-void Application::CreateLogicalDevice()
+bool Application::CreateLogicalDevice()
 {
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = {indices_.graphicsFamily.value(), indices_.presentFamily.value()};
@@ -145,10 +159,10 @@ void Application::CreateLogicalDevice()
 	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 	deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-	if (instance_.get()->IsValidationLayersEnabled())
+	if (instance_->IsValidationLayersEnabled())
 	{
-		deviceCreateInfo.enabledLayerCount		= static_cast<uint32_t>(instance_.get()->GetValidationLayers().size());
-		deviceCreateInfo.ppEnabledLayerNames	= instance_.get()->GetValidationLayers().data();
+		deviceCreateInfo.enabledLayerCount		= static_cast<uint32_t>(instance_->GetValidationLayers().size());
+		deviceCreateInfo.ppEnabledLayerNames	= instance_->GetValidationLayers().data();
 	}
 	else
 	{
@@ -157,17 +171,19 @@ void Application::CreateLogicalDevice()
 
 	if (vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &logicalDevice_) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create logical device!");
+		std::cout << "failed to create logical device!\n";
+		return false;
 	}
 
 	vkGetDeviceQueue(logicalDevice_, indices_.graphicsFamily.value(), 0, &graphicsQueue_);
 	vkGetDeviceQueue(logicalDevice_, indices_.presentFamily.value(), 0, &presentQueue_);
+	return true;
 }
 //======================================================================================================================
 bool Application::CreateSwapChain()
 {
 	swapChain_	= std::make_unique<Swapchain>(std::ref(logicalDevice_), std::ref(physicalDevice_), std::ref(*surface_), window_);
-	bool result = swapChain_.get()->Create() && swapChain_.get()->CreateImageViews() && swapChain_.get()->CreateDepthImageViews();
+	bool result = swapChain_->Create() && swapChain_->CreateImageViews() && swapChain_->CreateDepthImageViews();
 	return result;
 }
 //======================================================================================================================
@@ -178,7 +194,7 @@ bool Application::CreatePipeline()
 										   std::ref(*swapChain_),
 										   std::ref(indices_),
 										   window_);
-	if(!pipeline_.get()->Create())
+	if(!pipeline_->Create())
 	{
 		return false;
 	}
@@ -186,7 +202,7 @@ bool Application::CreatePipeline()
 }
 
 //======================================================================================================================
-void Application::CreateDescriptorSetLayout()
+bool Application::CreateDescriptorSetLayout()
 {
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
 	uboLayoutBinding.binding			= 0;
@@ -194,7 +210,6 @@ void Application::CreateDescriptorSetLayout()
 	uboLayoutBinding.descriptorCount	= 1;
 	uboLayoutBinding.stageFlags			= VK_SHADER_STAGE_VERTEX_BIT;
 	uboLayoutBinding.pImmutableSamplers	= nullptr; // Optional
-	uboLayoutBinding.stageFlags			= VK_SHADER_STAGE_VERTEX_BIT;
 
 	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
 	samplerLayoutBinding.binding			= 1;
@@ -211,16 +226,18 @@ void Application::CreateDescriptorSetLayout()
 
 	if (vkCreateDescriptorSetLayout(logicalDevice_, &layoutInfo, nullptr, &descriptorSetLayout_) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create descriptor set layout!");
+		std::cout << "failed to create descriptor set layout!\n";
+		return false;
 	}
+	return true;
 }
 //======================================================================================================================
 bool Application::CreateFramebuffers()
 {
-	return swapChain_.get()->CreateFramebuffers(pipeline_->GetRenderPass()->GetRenderPass());
+	return swapChain_->CreateFramebuffers(pipeline_->GetRenderPass()->GetRenderPass());
 }
 //======================================================================================================================
-void Application::CreateDescriptorPool()
+bool Application::CreateDescriptorPool()
 {
 	std::array<VkDescriptorPoolSize, 2> poolSizes{};
 	poolSizes[0].type				= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -236,8 +253,10 @@ void Application::CreateDescriptorPool()
 
 	if (vkCreateDescriptorPool(logicalDevice_, &poolInfo, nullptr, &descriptorPool_) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create descriptor pool!");
+		std::cout << "failed to create descriptor pool!\n";
+		return false;
 	}
+	return true;
 }
 //======================================================================================================================
 VkShaderModule  Application::CreateShaderModule(const std::vector<char>& _code)
@@ -258,25 +277,32 @@ VkShaderModule  Application::CreateShaderModule(const std::vector<char>& _code)
 //======================================================================================================================
 void Application::MainLoop()
 {
-	while (!glfwWindowShouldClose(window_.get()->GetWindow()))
+	while (!glfwWindowShouldClose(window_->GetWindow()))
 	{
 		glfwPollEvents();
-		DrawFrame();
+		if(!DrawFrame())
+		{
+			std::cout << "Rendering failed, exiting main loop\n";
+			break;
+		}
 	}
 
 	vkDeviceWaitIdle(logicalDevice_);
 }
 //======================================================================================================================
-void Application::DrawFrame()
+bool Application::DrawFrame()
 {
-	pipeline_->RenderFrame(sprites_,
-						   graphicsQueue_,
-						   presentQueue_);
+	return pipeline_->RenderFrame(sprites_,
+								  graphicsQueue_,
+								  presentQueue_);
 }
 //======================================================================================================================
 void Application::Cleanup()
 {
+	sprites_.clear();
+
 	swapChain_.reset();
+	pipeline_.reset();
 
 	vkDestroyDescriptorPool(logicalDevice_, descriptorPool_, nullptr);
 	vkDestroyDescriptorSetLayout(logicalDevice_, descriptorSetLayout_, nullptr);
@@ -284,9 +310,6 @@ void Application::Cleanup()
 	vkDestroyPipelineLayout(logicalDevice_, pipelineLayout_, nullptr);
 
 	surface_.reset();
-	pipeline_.reset();
-
-	sprites_.clear();
 
 	vkDestroyDevice(logicalDevice_, nullptr);
 
@@ -328,7 +351,7 @@ VkExtent2D Application::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabi
 	else
 	{
 		int width, height;
-		glfwGetFramebufferSize(window_.get()->GetWindow(), &width, &height);
+		glfwGetFramebufferSize(window_->GetWindow(), &width, &height);
 
 		VkExtent2D actualExtent =
 		{
@@ -350,8 +373,8 @@ bool Application::IsDeviceSuitable_(VkPhysicalDevice _device)
 	bool swapChainAdequate		= false;
 	if (extensionsSupported)
 	{
-		std::vector<VkSurfaceFormatKHR>	formats			= surface_.get()->GetFormats(_device);
-		std::vector<VkPresentModeKHR>	presentModes	= surface_.get()->GetPresentModes(_device);
+		std::vector<VkSurfaceFormatKHR>	formats			= surface_->GetFormats(_device);
+		std::vector<VkPresentModeKHR>	presentModes	= surface_->GetPresentModes(_device);
 		swapChainAdequate = !formats.empty() && !presentModes.empty();
 	}
 

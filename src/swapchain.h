@@ -47,6 +47,8 @@ private:
 	VkSwapchainKHR									chain_			= VK_NULL_HANDLE;
 	VkFormat										imageFormat_	= VK_FORMAT_UNDEFINED;
 	VkExtent2D										extent_;
+	std::vector<VkImage>							depthImages_;
+	std::vector<VkDeviceMemory>						depthImageMemories_;
 	std::vector<VkImageView>						depthImageViews_;
 	std::vector<VkImage>							images_;
 	std::vector<VkImageView>						imageViews_;

@@ -28,7 +28,7 @@ public:
 	RenderPass&	operator=(RenderPass&&)			= delete;
 
 	bool				Create();
-	void				Render(VkCommandBuffer,
+	bool				Render(VkCommandBuffer,
 							   uint32_t imageIndex,
 							   const std::vector<std::shared_ptr<Sprite>>&);
 	void				Cleanup();

@@ -25,7 +25,14 @@ Sprite::~Sprite()
 {
 	vertexBuffer_.reset();
 	indexBuffer_.reset();
+
+	// Unmap the persistently mapped uniform buffer memory before destroying it
+	if (uniformBufferMapped_)
+	{
+		vkUnmapMemory(logicalDevice_, uniformBuffer_->GetBufferMemory());
+	}
 	uniformBuffer_.reset();
+
 	texture_.reset();
 	vkDestroyDescriptorPool(logicalDevice_, descriptorPool_, nullptr);
 }
@@ -43,7 +50,7 @@ bool Sprite::Create(const std::string&				_texturePath,
 		return false;
 	}
 
-	if(!texture_.get()->TransitionImageLayout(VK_FORMAT_R8G8B8A8_SRGB,
+	if(!texture_->TransitionImageLayout(VK_FORMAT_R8G8B8A8_SRGB,
 											  VK_IMAGE_LAYOUT_UNDEFINED,
 											  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 											  _commandPool,
@@ -51,16 +58,16 @@ bool Sprite::Create(const std::string&				_texturePath,
 	{
 		return false;
 	}
-	texture_.get()->CopyBufferToImage(_commandPool, _graphicsQueue);
+	texture_->CopyBufferToImage(_commandPool, _graphicsQueue);
 
 	// To be able to start sampling from the texture image in the shader
-	texture_.get()->TransitionImageLayout(VK_FORMAT_R8G8B8A8_SRGB,
+	texture_->TransitionImageLayout(VK_FORMAT_R8G8B8A8_SRGB,
 										  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 										  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 										  _commandPool,
 										  _graphicsQueue);
-	texture_.get()->CreateTextureImageView();
-	texture_.get()->CreateTextureSampler();
+	texture_->CreateTextureImageView();
+	texture_->CreateTextureSampler();
 	CreateUniformBuffer();
 	CreateDescriptorPool();
 	CreateDescriptorSet(_descriptorSetLayout);
@@ -167,7 +174,7 @@ void Sprite::CreateVertexBuffer(std::shared_ptr<CommandPool>	_commandPool,
 	vkUnmapMemory(logicalDevice_, stagingBuffer.GetBufferMemory());
 
 	vertexBuffer_ = std::make_unique<Buffer>(sizeof(vertices[0]) * vertices.size(), std::ref(logicalDevice_));
-	vertexBuffer_.get()->CreateBuffer(physicalDevice_,
+	vertexBuffer_->CreateBuffer(physicalDevice_,
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	CommandBuffer commandBuffer(std::ref(logicalDevice_), std::ref(physicalDevice_), queueFamilyIndices_);
@@ -190,7 +197,7 @@ void Sprite::CreateIndexBuffer(std::shared_ptr<CommandPool>		_commandPool,
 	vkUnmapMemory(logicalDevice_, stagingBuffer.GetBufferMemory());
 
 	indexBuffer_ = std::make_unique<Buffer>(sizeof(indices[0]) * indices.size(), std::ref(logicalDevice_));
-	indexBuffer_.get()->CreateBuffer(physicalDevice_,
+	indexBuffer_->CreateBuffer(physicalDevice_,
 									 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 									 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	CommandBuffer commandBuffer(std::ref(logicalDevice_), std::ref(physicalDevice_), queueFamilyIndices_);

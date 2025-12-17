@@ -126,6 +126,8 @@ bool Swapchain::CreateImageViews()
 bool Swapchain::CreateDepthImageViews()
 {
 	VkFormat depthFormat = FindDepthFormat(physicalDevice_);
+	depthImages_.resize(images_.size());
+	depthImageMemories_.resize(images_.size());
 	depthImageViews_.resize(images_.size());
 
 	for (size_t i = 0; i < images_.size(); ++i)
@@ -145,33 +147,31 @@ bool Swapchain::CreateDepthImageViews()
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VkImage depthImage;
-		if (vkCreateImage(logicalDevice_, &imageInfo, nullptr, &depthImage) != VK_SUCCESS)
+		if (vkCreateImage(logicalDevice_, &imageInfo, nullptr, &depthImages_[i]) != VK_SUCCESS)
 		{
 			std::cout << "failed to create depth image!\n";
 			return false;
 		}
 
 		VkMemoryRequirements memRequirements;
-		vkGetImageMemoryRequirements(logicalDevice_, depthImage, &memRequirements);
+		vkGetImageMemoryRequirements(logicalDevice_, depthImages_[i], &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = Buffer::FindMemoryType(physicalDevice_, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT).value();
 
-		VkDeviceMemory depthImageMemory;
-		if (vkAllocateMemory(logicalDevice_, &allocInfo, nullptr, &depthImageMemory) != VK_SUCCESS)
+		if (vkAllocateMemory(logicalDevice_, &allocInfo, nullptr, &depthImageMemories_[i]) != VK_SUCCESS)
 		{
 			std::cout << "failed to allocate depth image memory!\n";
 			return false;
 		}
 
-		vkBindImageMemory(logicalDevice_, depthImage, depthImageMemory, 0);
+		vkBindImageMemory(logicalDevice_, depthImages_[i], depthImageMemories_[i], 0);
 
 		VkImageViewCreateInfo viewInfo{};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		viewInfo.image = depthImage;
+		viewInfo.image = depthImages_[i];
 		viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		viewInfo.format = depthFormat;
 		viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -249,9 +249,22 @@ void Swapchain::Cleanup()
 		vkDestroyImageView(logicalDevice_, imageView, nullptr);
 	}
 
+	// Destroy depth image views
 	for (auto depthImageView : depthImageViews_)
 	{
 		vkDestroyImageView(logicalDevice_, depthImageView, nullptr);
+	}
+
+	// Destroy depth images
+	for (auto depthImage : depthImages_)
+	{
+		vkDestroyImage(logicalDevice_, depthImage, nullptr);
+	}
+
+	// Free depth image memory
+	for (auto depthImageMemory : depthImageMemories_)
+	{
+		vkFreeMemory(logicalDevice_, depthImageMemory, nullptr);
 	}
 
 	vkDestroySwapchainKHR(logicalDevice_, chain_, nullptr);
