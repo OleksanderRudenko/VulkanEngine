@@ -14,9 +14,9 @@ class Window;
 class ENGINE_API Swapchain
 {
 public:
-	Swapchain(std::reference_wrapper<VkDevice> logicalDevice,
-			  std::reference_wrapper<VkPhysicalDevice>,
-			  std::reference_wrapper<Surface>,
+	Swapchain(VkDevice logicalDevice,
+			  VkPhysicalDevice physicalDevice,
+			  Surface* surface,
 			  std::shared_ptr<Window>);
 	Swapchain(const Swapchain&)				= delete;
 	Swapchain(Swapchain&&)					= delete;
@@ -39,9 +39,9 @@ public:
 private:
 	void		Cleanup();
 
-	const std::reference_wrapper<VkDevice>			logicalDevice_;
-	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
-	const std::reference_wrapper<Surface>			surface_;
+	VkDevice										logicalDevice_;
+	VkPhysicalDevice								physicalDevice_;
+	Surface*										surface_;
 	const std::shared_ptr<Window>					window_;
 
 	VkSwapchainKHR									chain_			= VK_NULL_HANDLE;

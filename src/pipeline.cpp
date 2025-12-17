@@ -12,11 +12,11 @@ namespace xengine
 {
 
 //======================================================================================================================
-Pipeline::Pipeline(std::reference_wrapper<VkDevice>				_logicalDevice,
-				   std::reference_wrapper<VkPhysicalDevice>		_physicalDevice,
-				   std::reference_wrapper<Swapchain>			_swapChain,
-				   std::reference_wrapper<QueueFamilyIndices>	_indices,
-				   std::shared_ptr<Window>						_window)
+Pipeline::Pipeline(VkDevice				_logicalDevice,
+				   VkPhysicalDevice		_physicalDevice,
+				   Swapchain*			_swapChain,
+				   const QueueFamilyIndices&	_indices,
+				   std::shared_ptr<Window>	_window)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , swapChain_(_swapChain)
@@ -51,8 +51,8 @@ bool Pipeline::Create()
 		return false;
 	}
 
-	commandPool_ = std::make_shared<CommandPool>(std::ref(logicalDevice_),
-												 std::ref(physicalDevice_),
+	commandPool_ = std::make_shared<CommandPool>(logicalDevice_,
+												 physicalDevice_,
 												 indices_);
 	commandPool_->Create();
 	CreateCommandBuffers();
@@ -68,14 +68,14 @@ bool Pipeline::RenderFrame(const std::vector<std::shared_ptr<Sprite>>&	_sprites,
 
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(logicalDevice_,
-											swapChain_.get().GetSwapChain(),
+											swapChain_->GetSwapChain(),
 											UINT64_MAX,
 											imageAvailableSemaphores_[currentFrame_],
 											VK_NULL_HANDLE,
 											&imageIndex);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		swapChain_.get().Recreate(renderPass_->GetRenderPass());
+		swapChain_->Recreate(renderPass_->GetRenderPass());
 		return true;  // Successfully handled, not an error
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
@@ -116,7 +116,7 @@ bool Pipeline::RenderFrame(const std::vector<std::shared_ptr<Sprite>>&	_sprites,
 	presentInfo.waitSemaphoreCount	= 1;
 	presentInfo.pWaitSemaphores		= signalSemaphores;
 
-	VkSwapchainKHR swapChains[]		= {swapChain_.get().GetSwapChain()};
+	VkSwapchainKHR swapChains[]		= {swapChain_->GetSwapChain()};
 	presentInfo.swapchainCount		= 1;
 	presentInfo.pSwapchains			= swapChains;
 	presentInfo.pImageIndices		= &imageIndex;
@@ -126,7 +126,7 @@ bool Pipeline::RenderFrame(const std::vector<std::shared_ptr<Sprite>>&	_sprites,
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window_->FramebufferResized())
 	{
 		window_->FramebufferResizedReset();
-		swapChain_.get().Recreate(renderPass_->GetRenderPass());
+		swapChain_->Recreate(renderPass_->GetRenderPass());
 	}
 	else if (result != VK_SUCCESS)
 	{
@@ -170,8 +170,8 @@ bool Pipeline::CreateCommandBuffers()
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
-		commandBuffers_.emplace_back(std::make_unique<CommandBuffer>(std::ref(logicalDevice_),
-																	 std::ref(physicalDevice_),
+		commandBuffers_.emplace_back(std::make_unique<CommandBuffer>(logicalDevice_,
+																	 physicalDevice_,
 																	 indices_));
 		if(!commandBuffers_[i]->Create(commandPool_))
 		{

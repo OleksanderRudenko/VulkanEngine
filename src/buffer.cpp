@@ -6,8 +6,8 @@ namespace xengine
 {
 
 //======================================================================================================================
-Buffer::Buffer(VkDeviceSize						_size,
-			   std::reference_wrapper<VkDevice>	_logicalDevice)
+Buffer::Buffer(VkDeviceSize	_size,
+			   VkDevice		_logicalDevice)
 : size_(_size)
 , logicalDevice_(_logicalDevice)
 {}

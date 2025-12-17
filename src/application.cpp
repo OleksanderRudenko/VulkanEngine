@@ -94,7 +94,7 @@ bool Application::CreateInstance()
 //======================================================================================================================
 bool Application::CreateSurface()
 {
-	surface_		= std::make_unique<Surface>(*instance_, window_->GetWindow());
+	surface_		= std::make_unique<Surface>(instance_.get(), window_->GetWindow());
 	bool isCreated	= surface_->Create();
 	return isCreated;
 }
@@ -182,17 +182,17 @@ bool Application::CreateLogicalDevice()
 //======================================================================================================================
 bool Application::CreateSwapChain()
 {
-	swapChain_	= std::make_unique<Swapchain>(std::ref(logicalDevice_), std::ref(physicalDevice_), std::ref(*surface_), window_);
+	swapChain_	= std::make_unique<Swapchain>(logicalDevice_, physicalDevice_, surface_.get(), window_);
 	bool result = swapChain_->Create() && swapChain_->CreateImageViews() && swapChain_->CreateDepthImageViews();
 	return result;
 }
 //======================================================================================================================
 bool Application::CreatePipeline()
 {
-	pipeline_ = std::make_unique<Pipeline>(std::ref(logicalDevice_),
-										   std::ref(physicalDevice_),
-										   std::ref(*swapChain_),
-										   std::ref(indices_),
+	pipeline_ = std::make_unique<Pipeline>(logicalDevice_,
+										   physicalDevice_,
+										   swapChain_.get(),
+										   indices_,
 										   window_);
 	if(!pipeline_->Create())
 	{

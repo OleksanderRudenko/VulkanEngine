@@ -10,9 +10,9 @@ namespace xengine
 {
 
 //======================================================================================================================
-Texture::Texture(std::reference_wrapper<VkDevice>			_logicalDevice,
-				 std::reference_wrapper<VkPhysicalDevice>	_physicalDevice,
-				 const QueueFamilyIndices&					_indices)
+Texture::Texture(VkDevice				_logicalDevice,
+				 VkPhysicalDevice		_physicalDevice,
+				 const QueueFamilyIndices&	_indices)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , indices_(_indices)
@@ -40,7 +40,7 @@ bool Texture::Create(const std::string& _path,
 		return false;
 	}
 
-	stagingBuffer_ = std::make_unique<Buffer>(imageSize, std::ref(logicalDevice_));
+	stagingBuffer_ = std::make_unique<Buffer>(imageSize, logicalDevice_);
 	stagingBuffer_->CreateBuffer(physicalDevice_,
 							   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 							   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);

@@ -11,10 +11,10 @@ namespace xengine
 {
 
 //======================================================================================================================
-Swapchain::Swapchain(std::reference_wrapper<VkDevice>			_logicalDevice,
-					 std::reference_wrapper<VkPhysicalDevice>	_physicalDevice,
-					 std::reference_wrapper<Surface>			_surface,
-					 std::shared_ptr<Window>					_window)
+Swapchain::Swapchain(VkDevice				_logicalDevice,
+					 VkPhysicalDevice		_physicalDevice,
+					 Surface*				_surface,
+					 std::shared_ptr<Window>	_window)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , surface_(_surface)
@@ -28,12 +28,12 @@ Swapchain::~Swapchain()
 //======================================================================================================================
 bool Swapchain::Create()
 {
-	VkSurfaceCapabilitiesKHR capabilities		= surface_.get().GetCapabilities(std::ref(physicalDevice_));
-	VkSurfaceFormatKHR		surfaceFormat		= Surface::ChooseSwapSurfaceFormat(surface_.get().GetFormats(std::ref(physicalDevice_)));
-	VkPresentModeKHR		presentMode			= Surface::ChooseSwapPresentMode(surface_.get().GetPresentModes(std::ref(physicalDevice_)));
+	VkSurfaceCapabilitiesKHR capabilities		= surface_->GetCapabilities(physicalDevice_);
+	VkSurfaceFormatKHR		surfaceFormat		= Surface::ChooseSwapSurfaceFormat(surface_->GetFormats(physicalDevice_));
+	VkPresentModeKHR		presentMode			= Surface::ChooseSwapPresentMode(surface_->GetPresentModes(physicalDevice_));
 	VkExtent2D				extent				= Surface::ChooseSwapExtent(capabilities, *window_);
 
-	uint32_t				imageCount			= surface_.get().GetCapabilities(std::ref(physicalDevice_)).minImageCount + 1;
+	uint32_t				imageCount			= surface_->GetCapabilities(physicalDevice_).minImageCount + 1;
 	if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
 	{
 		imageCount = capabilities.maxImageCount;
@@ -41,7 +41,7 @@ bool Swapchain::Create()
 
 	VkSwapchainCreateInfoKHR createInfo{};
 	createInfo.sType			= VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	createInfo.surface			= surface_.get().GetSurface();
+	createInfo.surface			= surface_->GetSurface();
 	createInfo.minImageCount	= imageCount;
 	createInfo.imageFormat		= surfaceFormat.format;
 	createInfo.imageColorSpace	= surfaceFormat.colorSpace;
@@ -49,7 +49,7 @@ bool Swapchain::Create()
 	createInfo.imageArrayLayers	= 1;
 	createInfo.imageUsage		= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	QueueFamilyIndices indices = surface_.get().FindQueueFamilies(physicalDevice_);
+	QueueFamilyIndices indices = surface_->FindQueueFamilies(physicalDevice_);
 	uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
 	if (indices.graphicsFamily != indices.presentFamily) {
@@ -209,7 +209,7 @@ bool Swapchain::CreateFramebuffers(VkRenderPass _renderPass)
 		framebufferInfo.height			= extent_.height;
 		framebufferInfo.layers			= 1;
 
-		if (vkCreateFramebuffer(logicalDevice_.get(), &framebufferInfo, nullptr, &framebuffers_[i]) != VK_SUCCESS)
+		if (vkCreateFramebuffer(logicalDevice_, &framebufferInfo, nullptr, &framebuffers_[i]) != VK_SUCCESS)
 		{
 			std::cout << "failed to create framebuffer!\n";
 			return false;

@@ -5,9 +5,9 @@ namespace xengine
 {
 
 //======================================================================================================================
-CommandPool::CommandPool(std::reference_wrapper<VkDevice>			_logicalDevice,
-						 std::reference_wrapper<VkPhysicalDevice>	_physicalDevice,
-						 const QueueFamilyIndices&					_indices)
+CommandPool::CommandPool(VkDevice					_logicalDevice,
+						 VkPhysicalDevice			_physicalDevice,
+						 const QueueFamilyIndices&	_indices)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , indices_(_indices)

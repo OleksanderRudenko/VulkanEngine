@@ -16,16 +16,16 @@ class Buffer;
 class Texture
 {
 public:
-	Texture(std::reference_wrapper<VkDevice>	logicalDevice,
-			std::reference_wrapper<VkPhysicalDevice>,
+	Texture(VkDevice logicalDevice,
+			VkPhysicalDevice physicalDevice,
 			const QueueFamilyIndices&);
 
-	Texture(const Texture&)					= default;
-	Texture(Texture&&)						= default;
+	Texture(const Texture&)					= delete;
+	Texture(Texture&&)						= delete;
 	virtual ~Texture();
 
-	Texture&	operator=(const Texture&)	= default;
-	Texture&	operator=(Texture&&)		= default;
+	Texture&	operator=(const Texture&)	= delete;
+	Texture&	operator=(Texture&&)		= delete;
 
 	const VkImage&		GetImage()		const	{ return image_; }
 	const VkImageView&	GetImageView()	const	{ return imageView_; }
@@ -50,8 +50,8 @@ public:
 	bool				CreateDepthImageView(VkFormat depthFormat);
 
 protected:
-	const std::reference_wrapper<VkDevice>			logicalDevice_;
-	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
+	VkDevice										logicalDevice_;
+	VkPhysicalDevice								physicalDevice_;
 	const QueueFamilyIndices						indices_;
 
 	VkImage											image_				= VK_NULL_HANDLE;

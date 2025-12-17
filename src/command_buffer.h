@@ -16,8 +16,8 @@ struct QueueFamilyIndices;
 class ENGINE_API CommandBuffer final
 {
 public:
-	CommandBuffer(std::reference_wrapper<VkDevice> logicalDevice,
-				  std::reference_wrapper<VkPhysicalDevice>,
+	CommandBuffer(VkDevice logicalDevice,
+				  VkPhysicalDevice physicalDevice,
 				  const QueueFamilyIndices&);
 	CommandBuffer(const CommandBuffer&)				= delete;
 	CommandBuffer(CommandBuffer&&)					= delete;
@@ -37,8 +37,8 @@ public:
 	//bool					BeginSingleTimeCommand(CommandPool*);
 
 private:
-	const std::reference_wrapper<VkDevice>			logicalDevice_;
-	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
+	VkDevice											logicalDevice_;
+	VkPhysicalDevice									physicalDevice_;
 	const QueueFamilyIndices						indices_;
 
 	VkCommandBuffer									buffer_			= VK_NULL_HANDLE;

@@ -19,10 +19,10 @@ struct QueueFamilyIndices;
 class ENGINE_API Pipeline
 {
 public:
-	Pipeline(std::reference_wrapper<VkDevice>	logicalDevice,
-			 std::reference_wrapper<VkPhysicalDevice>,
-			 std::reference_wrapper<Swapchain>,
-			 std::reference_wrapper<QueueFamilyIndices>,
+	Pipeline(VkDevice logicalDevice,
+			 VkPhysicalDevice physicalDevice,
+			 Swapchain* swapchain,
+			 const QueueFamilyIndices& indices,
 			 std::shared_ptr<Window>);
 	Pipeline(const Pipeline&)				= delete;
 	Pipeline(Pipeline&&)					= delete;
@@ -46,11 +46,11 @@ private:
 									uint32_t imageIndex,
 									const std::vector<std::shared_ptr<Sprite>>& _sprites);
 
-	const std::reference_wrapper<VkDevice>				logicalDevice_;
-	const std::reference_wrapper<VkPhysicalDevice>		physicalDevice_;
-	const std::reference_wrapper<Swapchain>				swapChain_;
-	const std::reference_wrapper<QueueFamilyIndices>	indices_;
-	const std::shared_ptr<Window>						window_;
+	VkDevice										logicalDevice_;
+	VkPhysicalDevice								physicalDevice_;
+	Swapchain*										swapChain_;
+	const QueueFamilyIndices&						indices_;
+	const std::shared_ptr<Window>					window_;
 
 	std::vector<VkSemaphore>							imageAvailableSemaphores_;
 	std::vector<VkSemaphore>							renderFinishedSemaphores_;

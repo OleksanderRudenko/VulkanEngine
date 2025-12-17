@@ -16,7 +16,7 @@ class Window;
 class ENGINE_API Surface
 {
 public:
-	Surface(std::reference_wrapper<Instance>,
+	Surface(Instance* instance,
 			GLFWwindow* window);
 	Surface(const Surface&)					= delete;
 	Surface(Surface&&)						= delete;
@@ -27,9 +27,9 @@ public:
 
 	bool									Create();
 	VkSurfaceKHR							GetSurface()	const	{ return surface_; }
-	VkSurfaceCapabilitiesKHR				GetCapabilities(std::reference_wrapper<VkPhysicalDevice>);
-	std::vector<VkSurfaceFormatKHR>			GetFormats(std::reference_wrapper<VkPhysicalDevice>);
-	std::vector<VkPresentModeKHR>			GetPresentModes(std::reference_wrapper<VkPhysicalDevice>);
+	VkSurfaceCapabilitiesKHR				GetCapabilities(VkPhysicalDevice);
+	std::vector<VkSurfaceFormatKHR>			GetFormats(VkPhysicalDevice);
+	std::vector<VkPresentModeKHR>			GetPresentModes(VkPhysicalDevice);
 	QueueFamilyIndices						FindQueueFamilies(VkPhysicalDevice);
 
 	static VkSurfaceFormatKHR				ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -38,7 +38,7 @@ public:
 															 const Window&);
 
 private:
-	const std::reference_wrapper<Instance>	instance_;
+	Instance*								instance_;
 	GLFWwindow*								window_		= nullptr;
 	VkSurfaceKHR							surface_	= VK_NULL_HANDLE;
 

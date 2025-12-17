@@ -13,8 +13,8 @@ namespace xengine
 class ENGINE_API CommandPool final
 {
 public:
-	CommandPool(std::reference_wrapper<VkDevice>			logicalDevice,
-				std::reference_wrapper<VkPhysicalDevice>	physicalDevice,
+	CommandPool(VkDevice logicalDevice,
+				VkPhysicalDevice physicalDevice,
 				const QueueFamilyIndices&);
 	CommandPool(const CommandPool&)					= delete;
 	CommandPool(CommandPool&&)						= delete;
@@ -27,8 +27,8 @@ public:
 	const VkCommandPool&	GetPool()	const		{ return commandPool_; }
 
 private:
-	const std::reference_wrapper<VkDevice>			logicalDevice_;
-	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
+	VkDevice											logicalDevice_;
+	VkPhysicalDevice									physicalDevice_;
 	const QueueFamilyIndices						indices_;
 
 	VkCommandPool									commandPool_ = VK_NULL_HANDLE;

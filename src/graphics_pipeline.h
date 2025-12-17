@@ -13,8 +13,8 @@ class Swapchain;
 class GraphicsPipeline
 {
 public:
-	GraphicsPipeline(std::reference_wrapper<VkDevice> logicalDevice,
-					 std::reference_wrapper<Swapchain>);
+	GraphicsPipeline(VkDevice logicalDevice,
+					 Swapchain* swapchain);
 	GraphicsPipeline(const GraphicsPipeline&)				= delete;
 	GraphicsPipeline(GraphicsPipeline&&)					= delete;
 	~GraphicsPipeline();
@@ -30,9 +30,9 @@ public:
 
 private:
 	VkShaderModule		CreateShaderModule(const std::vector<char>& code);
-	
-	const std::reference_wrapper<VkDevice>	logicalDevice_;
-	const std::reference_wrapper<Swapchain>	swapChain_;
+
+	VkDevice								logicalDevice_;
+	Swapchain*								swapChain_;
 
 	VkPipeline								graphicsPipeline_		= VK_NULL_HANDLE;
 	VkPipelineLayout						pipelineLayout_			= VK_NULL_HANDLE;

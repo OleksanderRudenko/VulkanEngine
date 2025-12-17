@@ -19,15 +19,15 @@ class Window;
 class Sprite : public GameObject
 {
 public:
-	Sprite(std::reference_wrapper<VkDevice> logicalDevice,
-		   std::reference_wrapper<VkPhysicalDevice>,
+	Sprite(VkDevice logicalDevice,
+		   VkPhysicalDevice physicalDevice,
 		   const QueueFamilyIndices&);
-	Sprite(const Sprite&)				= default;
-	Sprite(Sprite&&)					= default;
+	Sprite(const Sprite&)				= delete;
+	Sprite(Sprite&&)					= delete;
 	virtual ~Sprite();
 
-	Sprite& operator=(const Sprite&)	= default;
-	Sprite& operator=(Sprite&&)			= default;
+	Sprite& operator=(const Sprite&)	= delete;
+	Sprite& operator=(Sprite&&)			= delete;
 
 	bool					Create(const std::string& texturePath,
 								   std::shared_ptr<CommandPool>,
@@ -49,8 +49,8 @@ private:
 											  VkQueue graphicsQueue);
 	void					CreateUniformBuffer();
 
-	const std::reference_wrapper<VkDevice>			logicalDevice_;
-	const std::reference_wrapper<VkPhysicalDevice>	physicalDevice_;
+	VkDevice										logicalDevice_;
+	VkPhysicalDevice								physicalDevice_;
 	const QueueFamilyIndices&						queueFamilyIndices_;
 
 	std::unique_ptr<Texture>						texture_;

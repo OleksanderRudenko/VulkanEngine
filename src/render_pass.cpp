@@ -11,9 +11,9 @@ namespace xengine
 {
 
 //======================================================================================================================
-RenderPass::RenderPass(std::reference_wrapper<VkDevice>			_logicalDevice,
-					   std::reference_wrapper<VkPhysicalDevice>	_physicalDevice,
-					   std::reference_wrapper<Swapchain>		_swapChain)
+RenderPass::RenderPass(VkDevice			_logicalDevice,
+					   VkPhysicalDevice	_physicalDevice,
+					   Swapchain*		_swapChain)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , swapChain_(_swapChain)
@@ -27,7 +27,7 @@ RenderPass::~RenderPass()
 bool RenderPass::Create()
 {
 	VkAttachmentDescription colorAttachment{};
-	colorAttachment.format			= swapChain_.get().GetSwapChainImageFormat();
+	colorAttachment.format			= swapChain_->GetSwapChainImageFormat();
 	colorAttachment.samples			= VK_SAMPLE_COUNT_1_BIT;
 	colorAttachment.loadOp			= VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp			= VK_ATTACHMENT_STORE_OP_STORE;
@@ -84,7 +84,7 @@ bool RenderPass::Create()
 
 	// Create graphics pipeline
 	graphicsPipeline_ = std::make_unique<GraphicsPipeline>(logicalDevice_,
-														   std::ref(swapChain_));
+														   swapChain_);
 
 	return graphicsPipeline_->Create(renderPass_);
 }
@@ -96,9 +96,9 @@ bool RenderPass::Render(VkCommandBuffer								_commandBuffer,
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType				= VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass			= renderPass_;
-	renderPassInfo.framebuffer			= swapChain_.get().GetSwapChainFramebuffers()[_imageIndex];
+	renderPassInfo.framebuffer			= swapChain_->GetSwapChainFramebuffers()[_imageIndex];
 	renderPassInfo.renderArea.offset	= { 0, 0 };
-	renderPassInfo.renderArea.extent	= swapChain_.get().GetSwapChainExtent();
+	renderPassInfo.renderArea.extent	= swapChain_->GetSwapChainExtent();
 
 	// VkClearValue ? move into pipeline
 	std::array<VkClearValue, 2> clearValues{};
@@ -113,20 +113,20 @@ bool RenderPass::Render(VkCommandBuffer								_commandBuffer,
 	VkViewport viewport{};
 	viewport.x			= 0.0f;
 	viewport.y			= 0.0f;
-	viewport.width		= static_cast<float>(swapChain_.get().GetSwapChainExtent().width);
-	viewport.height		= static_cast<float>(swapChain_.get().GetSwapChainExtent().height);
+	viewport.width		= static_cast<float>(swapChain_->GetSwapChainExtent().width);
+	viewport.height		= static_cast<float>(swapChain_->GetSwapChainExtent().height);
 	viewport.minDepth	= 0.0f;
 	viewport.maxDepth	= 1.0f;
 	vkCmdSetViewport(_commandBuffer, 0, 1, &viewport);
 
 	VkRect2D scissor{};
 	scissor.offset = {0, 0};
-	scissor.extent = swapChain_.get().GetSwapChainExtent();
+	scissor.extent = swapChain_->GetSwapChainExtent();
 	vkCmdSetScissor(_commandBuffer, 0, 1, &scissor);
 
 	for (const auto& sprite : _sprites)
 	{
-		sprite->UpdateUbo(swapChain_.get().GetSwapChainExtent());
+		sprite->UpdateUbo(swapChain_->GetSwapChainExtent());
 	}
 
 	for (const auto& sprite : _sprites)

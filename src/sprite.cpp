@@ -13,9 +13,9 @@ namespace xengine
 {
 
 //======================================================================================================================
-Sprite::Sprite(std::reference_wrapper<VkDevice>			_logicalDevice,
-			   std::reference_wrapper<VkPhysicalDevice>	_physicalDevice,
-			   const QueueFamilyIndices&				_queueFamilyIndices)
+Sprite::Sprite(VkDevice					_logicalDevice,
+			   VkPhysicalDevice			_physicalDevice,
+			   const QueueFamilyIndices&	_queueFamilyIndices)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , queueFamilyIndices_(_queueFamilyIndices)
@@ -121,7 +121,7 @@ bool Sprite::CreateDescriptorSet(VkDescriptorSetLayout	_descriptorSetLayout)
 	allocInfo.descriptorSetCount	= 1;
 	allocInfo.pSetLayouts			= &_descriptorSetLayout;
 
-	VkResult result = vkAllocateDescriptorSets(logicalDevice_.get(), &allocInfo, &descriptorSet_);
+	VkResult result = vkAllocateDescriptorSets(logicalDevice_, &allocInfo, &descriptorSet_);
 	if (result != VK_SUCCESS)
 	{
 		std::cout << "failed to create descriptor set!\n";
@@ -156,14 +156,14 @@ bool Sprite::CreateDescriptorSet(VkDescriptorSetLayout	_descriptorSetLayout)
 	descriptorWrites[1].descriptorCount	= 1;
 	descriptorWrites[1].pImageInfo		= &imageInfo;
 
-	vkUpdateDescriptorSets(logicalDevice_.get(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+	vkUpdateDescriptorSets(logicalDevice_, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	return true;
 }
 //======================================================================================================================
 void Sprite::CreateVertexBuffer(std::shared_ptr<CommandPool>	_commandPool,
 								VkQueue							_graphicsQueue)
 {
-	Buffer stagingBuffer(sizeof(vertices[0]) * vertices.size(), std::ref(logicalDevice_));
+	Buffer stagingBuffer(sizeof(vertices[0]) * vertices.size(), logicalDevice_);
 	stagingBuffer.CreateBuffer(physicalDevice_,
 							   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 							   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -173,11 +173,11 @@ void Sprite::CreateVertexBuffer(std::shared_ptr<CommandPool>	_commandPool,
 	memcpy(data, vertices.data(), (size_t)stagingBuffer.GetSize());
 	vkUnmapMemory(logicalDevice_, stagingBuffer.GetBufferMemory());
 
-	vertexBuffer_ = std::make_unique<Buffer>(sizeof(vertices[0]) * vertices.size(), std::ref(logicalDevice_));
+	vertexBuffer_ = std::make_unique<Buffer>(sizeof(vertices[0]) * vertices.size(), logicalDevice_);
 	vertexBuffer_->CreateBuffer(physicalDevice_,
 									  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 									  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	CommandBuffer commandBuffer(std::ref(logicalDevice_), std::ref(physicalDevice_), queueFamilyIndices_);
+	CommandBuffer commandBuffer(logicalDevice_, physicalDevice_, queueFamilyIndices_);
 	commandBuffer.Create(_commandPool);
 	commandBuffer.CopyBuffer(stagingBuffer.GetBuffer(), vertexBuffer_->GetBuffer(), vertexBuffer_->GetSize());
 	commandBuffer.SubmitAndWaitIdle(_graphicsQueue);
@@ -186,7 +186,7 @@ void Sprite::CreateVertexBuffer(std::shared_ptr<CommandPool>	_commandPool,
 void Sprite::CreateIndexBuffer(std::shared_ptr<CommandPool>		_commandPool,
 							   VkQueue							_graphicsQueue)
 {
-	Buffer stagingBuffer(sizeof(indices[0]) * indices.size(), std::ref(logicalDevice_));
+	Buffer stagingBuffer(sizeof(indices[0]) * indices.size(), logicalDevice_);
 	stagingBuffer.CreateBuffer(physicalDevice_,
 							   VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 							   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -196,11 +196,11 @@ void Sprite::CreateIndexBuffer(std::shared_ptr<CommandPool>		_commandPool,
 	memcpy(data, indices.data(), (size_t)stagingBuffer.GetSize());
 	vkUnmapMemory(logicalDevice_, stagingBuffer.GetBufferMemory());
 
-	indexBuffer_ = std::make_unique<Buffer>(sizeof(indices[0]) * indices.size(), std::ref(logicalDevice_));
+	indexBuffer_ = std::make_unique<Buffer>(sizeof(indices[0]) * indices.size(), logicalDevice_);
 	indexBuffer_->CreateBuffer(physicalDevice_,
 									 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 									 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	CommandBuffer commandBuffer(std::ref(logicalDevice_), std::ref(physicalDevice_), queueFamilyIndices_);
+	CommandBuffer commandBuffer(logicalDevice_, physicalDevice_, queueFamilyIndices_);
 	commandBuffer.Create(_commandPool);
 	commandBuffer.CopyBuffer(stagingBuffer.GetBuffer(), indexBuffer_->GetBuffer(), indexBuffer_->GetSize());
 	commandBuffer.SubmitAndWaitIdle(_graphicsQueue);
@@ -210,7 +210,7 @@ void Sprite::CreateUniformBuffer()
 {
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-	uniformBuffer_ = std::make_unique<Buffer>(bufferSize, std::ref(logicalDevice_));
+	uniformBuffer_ = std::make_unique<Buffer>(bufferSize, logicalDevice_);
 	uniformBuffer_->CreateBuffer(physicalDevice_,
 								 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
