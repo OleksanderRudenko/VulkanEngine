@@ -5,6 +5,7 @@
 #include "command_buffer.h"
 #include "command_pool.h"
 #include "device_manager.h"
+#include "input_handler.h"
 #include "pipeline.h"
 #include "resource_manager.h"
 #include "sprite.h"
@@ -27,31 +28,34 @@ public:
 				uint32_t height);
 	Application(const Application&)					= delete;
 	Application(Application&&)						= delete;
-	virtual ~Application()							= default;
+	virtual ~Application();
 
 	Application&	operator=(const Application&)	= delete;
 	Application&	operator=(Application&&)		= delete;
 
 	bool					Init();
-	void					Run();
 
-	std::unique_ptr<Sprite>	CreateSprite(const std::string& path);
-	void					AddSprite(std::shared_ptr<Sprite> _sprite) { sprites_.push_back(_sprite); }
+	std::shared_ptr<Sprite>	CreateSprite(const std::string& path);
+
+	InputHandler*			GetInputHandler()	const	{ return inputHandler_.get(); }
+
+	// Main loop functions
+	void					DeviceWaitIdle();
+	bool					ShouldClose()		const;
+	void					GLFWPollEvents()	const;
+	bool					DrawFrame();
 
 private:
-	bool			InitVulkan();
-	bool			CreateInstance();
-	bool			CreateSurface();
-	bool			CreateSwapChain();
-	bool			CreatePipeline();
+	bool					InitVulkan();
+	bool					CreateInstance();
+	bool					CreateSurface();
+	bool					CreateSwapChain();
+	bool					CreatePipeline();
+	void					Cleanup();
 
-	bool			CreateFramebuffers();
+	bool					CreateFramebuffers();
 
-	VkShaderModule 	CreateShaderModule(const std::vector<char>& code);
-
-	void			MainLoop();
-	bool			DrawFrame();
-	void			Cleanup();
+	VkShaderModule			CreateShaderModule(const std::vector<char>& code);
 
 	// Swap chain functions
 	VkSurfaceFormatKHR			ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -59,6 +63,7 @@ private:
 	VkExtent2D					ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 	std::shared_ptr<Window>								window_;
+	std::unique_ptr<InputHandler>						inputHandler_;
 	std::unique_ptr<Instance>							instance_;
 	std::unique_ptr<Surface>							surface_;
 	std::unique_ptr<DeviceManager>						deviceManager_;

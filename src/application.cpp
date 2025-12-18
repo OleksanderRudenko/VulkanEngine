@@ -21,21 +21,24 @@ bool Application::Init()
 		return false;
 	}
 
+	// Initialize input handler
+	inputHandler_ = std::make_unique<InputHandler>();
+	inputHandler_->Init(window_->GetWindow());
+	window_->SetInputHandler(inputHandler_.get());
+
 	return InitVulkan();
 }
 //======================================================================================================================
-void Application::Run()
+std::shared_ptr<Sprite> Application::CreateSprite(const std::string& _path)
 {
-	MainLoop();
-	Cleanup();
-}
-//======================================================================================================================
-std::unique_ptr<Sprite> Application::CreateSprite(const std::string& _path)
-{
-	std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>(deviceManager_->GetLogicalDevice(),
+	std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>(deviceManager_->GetLogicalDevice(),
 															  deviceManager_->GetPhysicalDevice(),
 															  deviceManager_->GetQueueFamilyIndices());
 	sprite->Create(_path, pipeline_->GetCommandPool(), resourceManager_.get(), deviceManager_->GetGraphicsQueue());
+
+	// Automatically add to the internal sprites vector
+	sprites_.push_back(sprite);
+
 	return sprite;
 }
 //======================================================================================================================
@@ -139,19 +142,19 @@ VkShaderModule  Application::CreateShaderModule(const std::vector<char>& _code)
 	return shaderModule;
 }
 //======================================================================================================================
-void Application::MainLoop()
+void Application::DeviceWaitIdle()
 {
-	while (!glfwWindowShouldClose(window_->GetWindow()))
-	{
-		glfwPollEvents();
-		if(!DrawFrame())
-		{
-			std::cout << "Rendering failed, exiting main loop\n";
-			break;
-		}
-	}
-
 	vkDeviceWaitIdle(deviceManager_->GetLogicalDevice());
+}
+//======================================================================================================================
+bool Application::ShouldClose() const
+{
+	return glfwWindowShouldClose(window_->GetWindow());
+}
+//======================================================================================================================
+void Application::GLFWPollEvents() const
+{
+	glfwPollEvents();
 }
 //======================================================================================================================
 bool Application::DrawFrame()
@@ -161,8 +164,19 @@ bool Application::DrawFrame()
 								  deviceManager_->GetPresentQueue());
 }
 //======================================================================================================================
+Application::~Application()
+{
+	Cleanup();
+}
+//======================================================================================================================
 void Application::Cleanup()
 {
+	// 0. Wait for device to finish all operations before cleanup
+	if (deviceManager_)
+	{
+		vkDeviceWaitIdle(deviceManager_->GetLogicalDevice());
+	}
+
 	// 1. Clear sprites first - they depend on resourceManager's descriptorSetLayout and logicalDevice
 	sprites_.clear();
 

@@ -9,6 +9,16 @@
 namespace xengine
 {
 
+class InputHandler;
+class Window;
+
+// User pointer wrapper to allow both Window and InputHandler to use GLFW user pointer
+struct WindowUserPointer
+{
+	Window*			window			= nullptr;
+	InputHandler*	inputHandler	= nullptr;
+};
+
 class ENGINE_API Window final
 {
 public:
@@ -23,6 +33,7 @@ public:
 	Window&		operator=(Window&&)				= delete;
 
 	bool		Init();
+	void		SetInputHandler(InputHandler* inputHandler);
 
 	GLFWwindow	*GetWindow()			const	{ return window_.get(); }
 
@@ -43,11 +54,10 @@ private:
 	uint32_t	height_				= 0;
 	std::string	name_;
 
-	// todo: add Surface member here
-	//std::unique_ptr<Surface> surface_;
 	std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow*)>>	window_;
-	bool		isResizable_		= false;
-	bool		framebufferResized_	= false;
+	bool				isResizable_		= false;
+	bool				framebufferResized_	= false;
+	WindowUserPointer	userPointer_;
 };
 
 }

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "window.h"
+#include "input_handler.h"
 #include <iostream>
 
 namespace xengine
@@ -38,10 +39,17 @@ bool Window::Init()
 	window_ = std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow*)>>(glfwCreateWindow(width_, height_, "Vulkan", nullptr, nullptr),
 																			[](GLFWwindow* window) { if (window) glfwDestroyWindow(window);});
 
-	glfwSetWindowUserPointer(window_.get(), this);
+	// Setup user pointer wrapper for both Window and InputHandler
+	userPointer_.window = this;
+	glfwSetWindowUserPointer(window_.get(), &userPointer_);
 	glfwSetFramebufferSizeCallback(window_.get(), FramebufferResizeCallback);
 
 	return true;
+}
+//======================================================================================================================
+void Window::SetInputHandler(InputHandler* _inputHandler)
+{
+	userPointer_.inputHandler = _inputHandler;
 }
 //======================================================================================================================
 void Window::SetResizable(bool _isResizable)
@@ -54,12 +62,12 @@ void Window::FramebufferResizeCallback(GLFWwindow*	_window,
 									   int			_width,
 									   int			_height)
 {
-	Window* instance = static_cast<Window*>(glfwGetWindowUserPointer(_window));
-	if(instance)
+	WindowUserPointer* userPtr = static_cast<WindowUserPointer*>(glfwGetWindowUserPointer(_window));
+	if(userPtr && userPtr->window)
 	{
-		instance->framebufferResized_	= true;
-		instance->width_				= _width;
-		instance->height_				= _height;
+		userPtr->window->framebufferResized_	= true;
+		userPtr->window->width_					= _width;
+		userPtr->window->height_				= _height;
 	}
 }
 
