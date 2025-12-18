@@ -21,6 +21,8 @@
 namespace xengine
 {
 
+class ImGuiManager;
+
 class ENGINE_API Application
 {
 public:
@@ -38,6 +40,18 @@ public:
 	std::shared_ptr<Sprite>	CreateSprite(const std::string& path);
 
 	InputHandler*			GetInputHandler()	const	{ return inputHandler_.get(); }
+
+	// ImGui functions
+	void					BeginImGuiFrame();
+	void					RenderImGui();
+
+	// ImGui UI wrapper functions (so test app doesn't need ImGui headers)
+	void					ImGuiShowDemoWindow(bool* pOpen);
+	void					ImGuiBeginWindow(const char* name);
+	void					ImGuiEndWindow();
+	void					ImGuiText(const char* text);
+	bool					ImGuiButton(const char* label);
+	float					ImGuiGetFramerate() const;
 
 	// Main loop functions
 	void					DeviceWaitIdle();
@@ -68,6 +82,7 @@ private:
 	std::unique_ptr<Surface>							surface_;
 	std::unique_ptr<DeviceManager>						deviceManager_;
 	std::unique_ptr<ResourceManager>					resourceManager_;
+	std::unique_ptr<ImGuiManager>						imguiManager_;
 
 	std::unique_ptr<Swapchain>							swapChain_;
 

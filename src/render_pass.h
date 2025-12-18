@@ -14,6 +14,7 @@ class Sprite;
 class Swapchain;
 class GraphicsPipeline;
 class ResourceManager;
+class ImGuiManager;
 
 class ENGINE_API RenderPass
 {
@@ -21,7 +22,8 @@ public:
 	RenderPass(VkDevice logicalDevice,
 			   VkPhysicalDevice physicalDevice,
 			   Swapchain* swapchain,
-			   ResourceManager* resourceManager);
+			   ResourceManager* resourceManager,
+			   ImGuiManager* imguiManager = nullptr);
 	RenderPass(const RenderPass&)				= delete;
 	RenderPass(RenderPass&&)					= delete;
 	~RenderPass();
@@ -35,6 +37,7 @@ public:
 							   const std::vector<std::shared_ptr<Sprite>>&);
 	void				Cleanup();
 
+	void				SetImGuiManager(ImGuiManager* imguiManager) { imguiManager_ = imguiManager; }
 	const VkRenderPass&	GetRenderPass()		const { return renderPass_; }
 
 private:
@@ -42,6 +45,7 @@ private:
 	VkPhysicalDevice								physicalDevice_;
 	Swapchain*										swapChain_;
 	ResourceManager*								resourceManager_;
+	ImGuiManager*									imguiManager_;
 
 	VkRenderPass									renderPass_			= VK_NULL_HANDLE;
 	std::unique_ptr<GraphicsPipeline>				graphicsPipeline_;

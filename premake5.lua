@@ -15,13 +15,22 @@ project "vulkan_engine"
             "src/tools/**.h",
             "src/tools/**.cpp",
             "src/shaders/**.vert",
-            "src/shaders/**.frag"
+            "src/shaders/**.frag",
+            "Libraries/imgui/imgui.cpp",
+            "Libraries/imgui/imgui_demo.cpp",
+            "Libraries/imgui/imgui_draw.cpp",
+            "Libraries/imgui/imgui_tables.cpp",
+            "Libraries/imgui/imgui_widgets.cpp",
+            "Libraries/imgui/backends/imgui_impl_glfw.cpp",
+            "Libraries/imgui/backends/imgui_impl_vulkan.cpp"
     }
 
     includedirs {
         "Libraries/GLFW/include",
         "Libraries/GLM",
-        "Libraries/STB"
+        "Libraries/STB",
+        "Libraries/imgui",
+        "Libraries/imgui/backends"
     }
 
     filter "system:windows"
@@ -103,10 +112,9 @@ project "engine_test"
     }
 
     includedirs {
+        "./",
         "Libraries/GLFW/include",
-        "Libraries/GLM",
-        "Libraries/STB",
-        "./"
+        "Libraries/GLM"
     }
 
     links {

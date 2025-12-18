@@ -35,6 +35,7 @@ public:
 	const std::vector<VkFramebuffer>&	GetSwapChainFramebuffers()	const { return framebuffers_; }
 	VkFormat							GetSwapChainImageFormat()	const { return imageFormat_; }
 	const VkExtent2D&					GetSwapChainExtent()		const { return extent_; }
+	uint32_t							GetImageCount()				const { return static_cast<uint32_t>(images_.size()); }
 
 private:
 	void		Cleanup();

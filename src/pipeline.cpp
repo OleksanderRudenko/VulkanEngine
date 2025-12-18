@@ -17,13 +17,15 @@ Pipeline::Pipeline(VkDevice				_logicalDevice,
 				   Swapchain*			_swapChain,
 				   const QueueFamilyIndices&	_indices,
 				   std::shared_ptr<Window>	_window,
-				   ResourceManager*		_resourceManager)
+				   ResourceManager*		_resourceManager,
+				   ImGuiManager*		_imguiManager)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , swapChain_(_swapChain)
 , indices_(_indices)
 , window_(_window)
 , resourceManager_(_resourceManager)
+, imguiManager_(_imguiManager)
 {}
 //======================================================================================================================
 Pipeline::~Pipeline()
@@ -45,7 +47,8 @@ bool Pipeline::Create()
 	renderPass_ = std::make_shared<RenderPass>(logicalDevice_,
 											   physicalDevice_,
 											   swapChain_,
-											   resourceManager_);
+											   resourceManager_,
+											   imguiManager_);
 	if(!renderPass_->Create())
 	{
 		return false;
@@ -62,6 +65,15 @@ bool Pipeline::Create()
 	commandPool_->Create();
 	CreateCommandBuffers();
 	return true;
+}
+//======================================================================================================================
+void Pipeline::SetImGuiManager(ImGuiManager* _imguiManager)
+{
+	imguiManager_ = _imguiManager;
+	if (renderPass_)
+	{
+		renderPass_->SetImGuiManager(_imguiManager);
+	}
 }
 //======================================================================================================================
 bool Pipeline::RenderFrame(const std::vector<std::shared_ptr<Sprite>>&	_sprites,

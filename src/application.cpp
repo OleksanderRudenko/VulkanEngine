@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "application.h"
+#include "imgui_manager.h"
 #include "vertex.h"
 #include "uniform.h"
 #include "tools/timer.h"
+#include <imgui.h>
 #include <algorithm>
 
 namespace xengine
@@ -77,6 +79,22 @@ bool Application::InitVulkan()
 	{
 		return false;
 	}
+
+	// Initialize ImGui after pipeline is created (needs render pass)
+	imguiManager_ = std::make_unique<ImGuiManager>(instance_->GetInstance(),
+												   deviceManager_->GetLogicalDevice(),
+												   deviceManager_->GetPhysicalDevice(),
+												   deviceManager_->GetQueueFamilyIndices().graphicsFamily.value(),
+												   deviceManager_->GetGraphicsQueue(),
+												   pipeline_->GetRenderPass()->GetRenderPass(),
+												   swapChain_->GetImageCount());
+	if(!imguiManager_->Init(window_->GetWindow()))
+	{
+		return false;
+	}
+
+	// Set ImGuiManager in pipeline so it can render ImGui
+	pipeline_->SetImGuiManager(imguiManager_.get());
 
 	return true;
 }
@@ -164,6 +182,50 @@ bool Application::DrawFrame()
 								  deviceManager_->GetPresentQueue());
 }
 //======================================================================================================================
+void Application::BeginImGuiFrame()
+{
+	if(imguiManager_)
+	{
+		imguiManager_->NewFrame();
+	}
+}
+//======================================================================================================================
+void Application::RenderImGui()
+{
+	// ImGui rendering is handled inside RenderPass during command buffer recording
+	// This method is here for potential future use
+}
+//======================================================================================================================
+void Application::ImGuiShowDemoWindow(bool* _pOpen)
+{
+	ImGui::ShowDemoWindow(_pOpen);
+}
+//======================================================================================================================
+void Application::ImGuiBeginWindow(const char* _name)
+{
+	ImGui::Begin(_name);
+}
+//======================================================================================================================
+void Application::ImGuiEndWindow()
+{
+	ImGui::End();
+}
+//======================================================================================================================
+void Application::ImGuiText(const char* _text)
+{
+	ImGui::Text("%s", _text);
+}
+//======================================================================================================================
+bool Application::ImGuiButton(const char* _label)
+{
+	return ImGui::Button(_label);
+}
+//======================================================================================================================
+float Application::ImGuiGetFramerate() const
+{
+	return ImGui::GetIO().Framerate;
+}
+//======================================================================================================================
 Application::~Application()
 {
 	Cleanup();
@@ -180,20 +242,23 @@ void Application::Cleanup()
 	// 1. Clear sprites first - they depend on resourceManager's descriptorSetLayout and logicalDevice
 	sprites_.clear();
 
-	// 2. Destroy swapchain and pipeline
+	// 2. Shutdown ImGui (needs to happen before pipeline is destroyed)
+	imguiManager_.reset();
+
+	// 3. Destroy swapchain and pipeline
 	swapChain_.reset();
 	pipeline_.reset();
 
-	// 3. Destroy resource manager (destroys descriptor layouts and pipeline layout)
+	// 4. Destroy resource manager (destroys descriptor layouts and pipeline layout)
 	resourceManager_.reset();
 
-	// 4. Destroy device manager (destroys logical device)
+	// 5. Destroy device manager (destroys logical device)
 	deviceManager_.reset();
 
-	// 5. Destroy surface (device depends on surface, so device destroyed first)
+	// 6. Destroy surface (device depends on surface, so device destroyed first)
 	surface_.reset();
 
-	// 6. Finally destroy instance (must be last)
+	// 7. Finally destroy instance (must be last)
 	instance_.reset();
 }
 //======================================================================================================================

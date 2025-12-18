@@ -15,6 +15,7 @@ class CommandPool;
 class Swapchain;
 class Window;
 class ResourceManager;
+class ImGuiManager;
 struct QueueFamilyIndices;
 
 class ENGINE_API Pipeline
@@ -25,7 +26,8 @@ public:
 			 Swapchain* swapchain,
 			 const QueueFamilyIndices& indices,
 			 std::shared_ptr<Window>,
-			 ResourceManager* resourceManager);
+			 ResourceManager* resourceManager,
+			 ImGuiManager* imguiManager = nullptr);
 	Pipeline(const Pipeline&)				= delete;
 	Pipeline(Pipeline&&)					= delete;
 	~Pipeline();
@@ -38,6 +40,7 @@ public:
 							VkQueue graphicsQueue,
 							VkQueue	presentQueue);
 
+	void							SetImGuiManager(ImGuiManager* imguiManager);
 	std::shared_ptr<RenderPass>		GetRenderPass()		const { return renderPass_; }
 	std::shared_ptr<CommandPool>	GetCommandPool()	const { return commandPool_; }
 
@@ -54,6 +57,7 @@ private:
 	const QueueFamilyIndices&						indices_;
 	const std::shared_ptr<Window>					window_;
 	ResourceManager*								resourceManager_;
+	ImGuiManager*									imguiManager_;
 
 	std::vector<VkSemaphore>							imageAvailableSemaphores_;
 	std::vector<VkSemaphore>							renderFinishedSemaphores_;

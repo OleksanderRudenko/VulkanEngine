@@ -2,6 +2,7 @@
 #include "render_pass.h"
 #include "buffer.h"
 #include "graphics_pipeline.h"
+#include "imgui_manager.h"
 #include "resource_manager.h"
 #include "sprite.h"
 #include "swapchain.h"
@@ -15,11 +16,13 @@ namespace xengine
 RenderPass::RenderPass(VkDevice			_logicalDevice,
 					   VkPhysicalDevice	_physicalDevice,
 					   Swapchain*		_swapChain,
-					   ResourceManager*	_resourceManager)
+					   ResourceManager*	_resourceManager,
+					   ImGuiManager*	_imguiManager)
 : logicalDevice_(_logicalDevice)
 , physicalDevice_(_physicalDevice)
 , swapChain_(_swapChain)
 , resourceManager_(_resourceManager)
+, imguiManager_(_imguiManager)
 {}
 //======================================================================================================================
 RenderPass::~RenderPass()
@@ -150,6 +153,12 @@ bool RenderPass::Render(VkCommandBuffer								_commandBuffer,
 								nullptr);
 		//sprite->UpdateUbo();
 		vkCmdDrawIndexed(_commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+	}
+
+	// Render ImGui on top of everything
+	if (imguiManager_)
+	{
+		imguiManager_->Render(_commandBuffer);
 	}
 
 	vkCmdEndRenderPass(_commandBuffer);

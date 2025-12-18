@@ -1,6 +1,7 @@
 #include <src/application.h>
 #include <src/vulkan_engine_lib.h>
 #include <stdexcept>
+#include <sstream>
 
 int main()
 {
@@ -20,10 +21,41 @@ int main()
 
 		xengine::InputHandler* input = app.GetInputHandler();
 		glm::vec3 position(0,0,0);
+		bool showDemoWindow = true;
 		while(!app.ShouldClose())
 		{
 			app.GLFWPollEvents();
 			input->Update();
+
+			// Start ImGui frame
+			app.BeginImGuiFrame();
+
+			// ImGui Demo Window
+			if (showDemoWindow)
+			{
+				app.ImGuiShowDemoWindow(&showDemoWindow);
+			}
+
+			// Custom ImGui window
+			app.ImGuiBeginWindow("Debug Info");
+
+			// FPS text
+			std::ostringstream fpsText;
+			fpsText << "FPS: " << app.ImGuiGetFramerate();
+			app.ImGuiText(fpsText.str().c_str());
+
+			// Position text
+			std::ostringstream posText;
+			posText << "Sprite Position: " << position.x << ", 0.25";
+			app.ImGuiText(posText.str().c_str());
+
+			if (app.ImGuiButton("Reset Position"))
+			{
+				position.x = 0.0f;
+				sprite2->SetPosition(glm::vec3(position.x, 0.25f, 0.0f));
+			}
+			app.ImGuiEndWindow();
+
 			if(!app.DrawFrame())
 			{
 				std::cout << "Rendering failed\n";
